@@ -2,75 +2,25 @@
 -- CHAT --
 -------------
 
-local shortNames = {
-    ["General"] = "[GEN]",
-    ["Trade"] = "[TRADE]",
-    ["Trade - City"] = "[TRADE]",
-    ["Trade (Services)"] = "[T(S)]",
-    ["LocalDefense"] = "[LD]",
-    ["LookingForGroup"] = "[LFG]",
-    ["GuildRecruitment"] = "[GR]",
-    ["WorldDefense"] = "[WD]",
-    ["Guild"] = "[G]",
-    ["Officer"] = "[O]",
-    ["Party"] = "[P]",
-    ["Party Leader"] = "[PL]",
-    ["Party Leader (Guide)"] = "[PL]",
-    ["Raid"] = "[R]",
-    ["Raid Leader"] = "[RL]",
-    ["Raid Warning"] = "[RW]",
-    ["Instance"] = "[I]",
-    ["Instance Leader"] = "[IL]",
-}
-
-local function AddTimestamp(msg)
-    local timeStamp = date("|cff999999[%H:%M]|r")
-    return timeStamp .. " " .. msg
-end
-
-local function ShortenChannelNames(msg)
-    -- Replace [number. ChannelName]
-    msg = msg:gsub("%[(%d+)%. ([^%]]+)%]", function(num, name)
-        local short = shortNames[name]
-        if short then
-            return short
-        else
-            return "[" .. num .. "]"
-        end
-    end)
-
-    -- Replace [ChannelName] without number (fallback)
-    msg = msg:gsub("%[([^%]]+)%]", function(name)
-        local short = shortNames[name]
-        if short then
-            return short
-        else
-            return "[" .. name .. "]"
-        end
-    end)
-
-    return msg
-end
-
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-frame:SetScript("OnEvent", function(self, event, addonName)
-    -- Run only after Blizzard chat frames loaded or when player enters world
-    if event == "ADDON_LOADED" and addonName ~= "Blizzard_ChatUI" then return end
+frame:SetScript("OnEvent", function(self, event)
+    -- Function to format timestamp
+    local function AddTimestamp(msg)
+        local timeStamp = date("|cff999999[%H:%M]|r")
+        return timeStamp .. " " .. msg
+    end
 
+    -- Override AddMessage for each chat frame to prepend timestamp
     for i = 1, NUM_CHAT_WINDOWS do
         local chatFrame = _G["ChatFrame"..i]
         if chatFrame and not chatFrame.originalAddMessage then
             chatFrame.originalAddMessage = chatFrame.AddMessage
             chatFrame.AddMessage = function(self, msg, ...)
-                if type(msg) == "string" then
-                    -- Avoid duplicate timestamps
-                    if not msg:find("^|cff999999%[%d%d:%d%d%]|r") then
-                        msg = AddTimestamp(msg)
-                    end
-                    msg = ShortenChannelNames(msg)
+                if type(msg) == "string" and not msg:find("^|cff999999%[%d%d:%d%d%]|r") then
+                    msg = AddTimestamp(msg)
                 end
                 return self:originalAddMessage(msg, ...)
             end
@@ -217,10 +167,9 @@ for _, event in pairs({
 }) do
     ChatFrame_AddMessageEventFilter(event, function(self, event, str, ...)
         for _, pattern in pairs(urlPatterns) do
-            -- Replace URLs with clickable, colored links
             local result, match = gsub(str, pattern, "|cff0394ff|Hurl:%1|h[%1]|h|r")
             if match > 0 then
-                return false, result, ...  -- Return modified message
+                return false, result, ...
             end
         end
     end)
