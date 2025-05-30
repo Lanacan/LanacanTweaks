@@ -2,83 +2,141 @@
 -- CHAT --
 -------------
 
--- Create a frame to listen for addon and player events
+local shortNames = {
+    ["General"] = "[GEN]",
+    ["Trade"] = "[TRADE]",
+    ["Trade - City"] = "[TRADE]",
+    ["Trade (Services)"] = "[T(S)]",
+    ["LocalDefense"] = "[LD]",
+    ["LookingForGroup"] = "[LFG]",
+    ["GuildRecruitment"] = "[GR]",
+    ["WorldDefense"] = "[WD]",
+    ["Guild"] = "[G]",
+    ["Officer"] = "[O]",
+    ["Party"] = "[P]",
+    ["Party Leader"] = "[PL]",
+    ["Party Leader (Guide)"] = "[PL]",
+    ["Raid"] = "[R]",
+    ["Raid Leader"] = "[RL]",
+    ["Raid Warning"] = "[RW]",
+    ["Instance"] = "[I]",
+    ["Instance Leader"] = "[IL]",
+}
+
+local function AddTimestamp(msg)
+    local timeStamp = date("|cff999999[%H:%M]|r")
+    return timeStamp .. " " .. msg
+end
+
+local function ShortenChannelNames(msg)
+    -- Replace [number. ChannelName]
+    msg = msg:gsub("%[(%d+)%. ([^%]]+)%]", function(num, name)
+        local short = shortNames[name]
+        if short then
+            return short
+        else
+            return "[" .. num .. "]"
+        end
+    end)
+
+    -- Replace [ChannelName] without number (fallback)
+    msg = msg:gsub("%[([^%]]+)%]", function(name)
+        local short = shortNames[name]
+        if short then
+            return short
+        else
+            return "[" .. name .. "]"
+        end
+    end)
+
+    return msg
+end
+
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")           -- Fired when an addon (including this one) loads
-frame:RegisterEvent("PLAYER_ENTERING_WORLD")  -- Fired when player logs in or zones
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-frame:SetScript("OnEvent", function(self, event)
-    -- Customize general chat frame fading behavior and tab transparency
-    CHAT_FRAME_FADE_TIME = 0.15                     -- How fast the chat fades out
-    CHAT_FRAME_FADE_OUT_TIME = 1                     -- How long the chat remains visible before fading
-    CHAT_TAB_HIDE_DELAY = 0                          -- Delay before hiding tabs (0 = instant)
-    CHAT_FRAME_TAB_SELECTED_MOUSEOVER_ALPHA = 1    -- Fully opaque tab when selected and mouse over
-    CHAT_FRAME_TAB_SELECTED_NOMOUSE_ALPHA = 0      -- Invisible tab when selected and mouse not over
-    CHAT_FRAME_TAB_ALERTING_MOUSEOVER_ALPHA = 1    -- Fully opaque tab when alerting and mouse over
-    CHAT_FRAME_TAB_ALERTING_NOMOUSE_ALPHA = 1      -- Fully opaque tab when alerting and no mouse
-    CHAT_FRAME_TAB_NORMAL_MOUSEOVER_ALPHA = 1      -- Fully opaque tab when normal and mouse over
-    CHAT_FRAME_TAB_NORMAL_NOMOUSE_ALPHA = 0        -- Invisible tab when normal and no mouse
+frame:SetScript("OnEvent", function(self, event, addonName)
+    -- Run only after Blizzard chat frames loaded or when player enters world
+    if event == "ADDON_LOADED" and addonName ~= "Blizzard_ChatUI" then return end
 
-    -- Enable fading for all default chat frames (1 to 7)
-    for i = 1, 7 do
-        _G["ChatFrame"..i]:SetFading(1)
+    for i = 1, NUM_CHAT_WINDOWS do
+        local chatFrame = _G["ChatFrame"..i]
+        if chatFrame and not chatFrame.originalAddMessage then
+            chatFrame.originalAddMessage = chatFrame.AddMessage
+            chatFrame.AddMessage = function(self, msg, ...)
+                if type(msg) == "string" then
+                    -- Avoid duplicate timestamps
+                    if not msg:find("^|cff999999%[%d%d:%d%d%]|r") then
+                        msg = AddTimestamp(msg)
+                    end
+                    msg = ShortenChannelNames(msg)
+                end
+                return self:originalAddMessage(msg, ...)
+            end
+        end
     end
 
-    -- Hide Blizzard's default chat menu button permanently
+    -- Chat frame fading settings
+    CHAT_FRAME_FADE_TIME = 0.15
+    CHAT_FRAME_FADE_OUT_TIME = 1
+    CHAT_TAB_HIDE_DELAY = 0
+    CHAT_FRAME_TAB_SELECTED_MOUSEOVER_ALPHA = 1
+    CHAT_FRAME_TAB_SELECTED_NOMOUSE_ALPHA = 0
+    CHAT_FRAME_TAB_ALERTING_MOUSEOVER_ALPHA = 1
+    CHAT_FRAME_TAB_ALERTING_NOMOUSE_ALPHA = 1
+    CHAT_FRAME_TAB_NORMAL_MOUSEOVER_ALPHA = 1
+    CHAT_FRAME_TAB_NORMAL_NOMOUSE_ALPHA = 0
+
+    for i = 1, 7 do
+        _G["ChatFrame"..i]:SetFading(true)
+    end
+
     if ChatFrameMenuButton then
         ChatFrameMenuButton:HookScript("OnShow", ChatFrameMenuButton.Hide)
         ChatFrameMenuButton:Hide()
     end
 
-    -- Table to track which frames have been processed to avoid duplicates
     local processedFrames = {}
 
-    -- Function to style and modify a single chat frame
     local function ProcessFrame(frame)
-        if processedFrames[frame] then return end  -- Skip if already processed
+        if processedFrames[frame] then return end
 
         local name = frame:GetName()
 
-        -- Hide the chat frame's button frame (minimize, maximize buttons)
         if _G[name.."ButtonFrame"] then
             _G[name.."ButtonFrame"]:Hide()
         end
 
-        -- Hide the edit box borders for cleaner look
         if _G[name.."EditBoxLeft"] then
             _G[name.."EditBoxLeft"]:Hide()
             _G[name.."EditBoxMid"]:Hide()
             _G[name.."EditBoxRight"]:Hide()
         end
 
-        -- Reposition and style the chat edit box (where you type messages)
         local editbox = _G[name.."EditBox"]
         if editbox then
             editbox:ClearAllPoints()
             editbox:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", -7, 25)
             editbox:SetPoint("BOTTOMRIGHT", ChatFrame1, "TOPRIGHT", 10, 25)
-            editbox:SetAltArrowKeyMode(false) -- Allow arrow keys without Alt
+            editbox:SetAltArrowKeyMode(false)
         end
 
-        -- Hide scrollbar if it exists (clean UI)
         if frame.ScrollBar then
             frame.ScrollBar:Hide()
-            frame.ScrollBar.Show = function() end -- Disable showing again
+            frame.ScrollBar.Show = function() end
         end
 
-        -- Hide scroll to bottom button if it exists
         if frame.ScrollToBottomButton then
             frame.ScrollToBottomButton:Hide()
             frame.ScrollToBottomButton.Show = function() end
         end
 
-        -- Voice chat button handling (may not exist in Classic)
         if ChatFrameChannelButton then
             frame:EnableMouse(true)
             ChatFrameChannelButton:EnableMouse(true)
-            ChatFrameChannelButton:SetAlpha(0) -- Initially hidden
+            ChatFrameChannelButton:SetAlpha(0)
 
-            -- Fade in button on mouse enter
             frame:SetScript("OnEnter", function()
                 ChatFrameChannelButton:SetAlpha(0.8)
             end)
@@ -94,16 +152,14 @@ frame:SetScript("OnEvent", function(self, event)
             end)
         end
 
-        processedFrames[frame] = true -- Mark frame as processed
+        processedFrames[frame] = true
     end
 
-    -- Process all default chat frames to apply our styling
     for i = 1, NUM_CHAT_WINDOWS do
         local chatFrame = _G["ChatFrame"..i]
         if chatFrame then
             ProcessFrame(chatFrame)
 
-            -- Remove textures from chat tabs to create a minimalist look
             local tab = _G["ChatFrame"..i.."Tab"]
             if tab then
                 if _G["ChatFrame"..i.."TabLeft"] then _G["ChatFrame"..i.."TabLeft"]:SetTexture(nil) end
@@ -112,108 +168,35 @@ frame:SetScript("OnEvent", function(self, event)
                 if _G["ChatFrame"..i.."TabSelectedLeft"] then _G["ChatFrame"..i.."TabSelectedLeft"]:SetTexture(nil) end
                 if _G["ChatFrame"..i.."TabSelectedMiddle"] then _G["ChatFrame"..i.."TabSelectedMiddle"]:SetTexture(nil) end
                 if _G["ChatFrame"..i.."TabSelectedRight"] then _G["ChatFrame"..i.."TabSelectedRight"]:SetTexture(nil) end
-                tab:SetAlpha(1.0) -- Fully opaque tabs
+                tab:SetAlpha(1.0)
             end
         end
     end
 
-    -- Hook the function that creates temporary chat windows to style them as well
     local old_OpenTemporaryWindow = FCF_OpenTemporaryWindow
     FCF_OpenTemporaryWindow = function(...)
-        local frame = old_OpenTemporaryWindow(...)
-        ProcessFrame(frame)
-        return frame
+        local newFrame = old_OpenTemporaryWindow(...)
+        ProcessFrame(newFrame)
+        return newFrame
     end
 
-    -- Override the mouse scroll behavior on chat frames for enhanced scrolling
     function FloatingChatFrame_OnMouseScroll(self, delta)
         if delta > 0 then
             if IsShiftKeyDown() then
-                self:ScrollToTop()  -- Scroll all the way up with Shift + scroll up
+                self:ScrollToTop()
             else
-                self:ScrollUp()     -- Scroll up normally
+                self:ScrollUp()
             end
         elseif delta < 0 then
             if IsShiftKeyDown() then
-                self:ScrollToBottom() -- Scroll all the way down with Shift + scroll down
+                self:ScrollToBottom()
             else
-                self:ScrollDown()     -- Scroll down normally
+                self:ScrollDown()
             end
         end
     end
-
-    -- Chat copy functionality: create a frame where chat text can be copied
-    local copyFrame, copyEditBox, copyScrollFrame
-
-    local function CreateCopyFrame()
-        copyFrame = CreateFrame("Frame", "CopyFrame", UIParent)
-        copyFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            tile = false,
-            tileSize = 32,
-            edgeSize = 15,
-            insets = {left = 1, right = 1, top = 1, bottom = 1}
-        })
-        copyFrame:SetSize(540, 300)
-        copyFrame:SetPoint("CENTER")
-        copyFrame:SetFrameStrata("DIALOG")
-        tinsert(UISpecialFrames, "CopyFrame") -- Allow ESC key to close frame
-        copyFrame:Hide()
-
-        -- Edit box inside copy frame to show the copied text
-        copyEditBox = CreateFrame("EditBox", "CopyBox", copyFrame)
-        copyEditBox:SetMultiLine(true)
-        copyEditBox:SetMaxLetters(99999)
-        copyEditBox:EnableMouse(true)
-        copyEditBox:SetAutoFocus(false)
-        copyEditBox:SetFontObject(ChatFontNormal)
-        copyEditBox:SetSize(500, 300)
-        copyEditBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)
-
-        -- Scroll frame for the edit box
-        copyScrollFrame = CreateFrame("ScrollFrame", "CopyScroll", copyFrame, "UIPanelScrollFrameTemplate")
-        copyScrollFrame:SetPoint("TOPLEFT", 8, -10)
-        copyScrollFrame:SetPoint("BOTTOMRIGHT", -30, 8)
-        copyScrollFrame:SetScrollChild(copyEditBox)
-    end
-
-    -- Add a small copy button to each chat frame to open the copy window
-    for i = 1, NUM_CHAT_WINDOWS do
-        local chatFrame = _G["ChatFrame"..i]
-        if chatFrame then
-            local copyButton = CreateFrame("Button", nil, chatFrame)
-            copyButton:SetSize(20, 20)
-            copyButton:SetPoint("TOPRIGHT", chatFrame, 10, -5)
-
-            -- Uncomment and set custom textures for the copy button if desired
-            -- copyButton:SetNormalTexture("Interface\\AddOns\\YourAddon\\Textures\\copynormal")
-            -- copyButton:SetHighlightTexture("Interface\\AddOns\\YourAddon\\Textures\\copyhighlight")
-
-            copyButton:SetScript("OnClick", function()
-                if not copyFrame then CreateCopyFrame() end
-
-                local text = ""
-                -- Collect all chat messages visible in this chat frame
-                for j = 1, chatFrame:GetNumMessages() do
-                    local line = chatFrame:GetMessageInfo(j)
-                    -- Filter out certain protected hyperlinks (like player names)
-                    if line and not strmatch(line, '[^|]-|K[vq]%d-[^|]-|k') then
-                        text = text..line.."\n"
-                    end
-                end
-
-                -- Replace raid target icons with text equivalents
-                text = text:gsub("|T13700([1-8])[^|]+|t", "{rt%1}")
-                -- Remove any remaining texture tags (icons)
-                text = text:gsub("|T[^|]+|t", "")
-
-                copyFrame:Show()
-                copyEditBox:SetText(text)
-            end)
-        end
-    end
 end)
+
 
 -- URL highlighting patterns for various URL forms
 local urlPatterns = {
@@ -254,4 +237,10 @@ function ItemRefTooltip:SetHyperlink(link, ...)
         return
     end
     originalSetHyperlink(self, link, ...)
+end
+
+-- === Slash Command to reload UI ===
+SLASH_RELOAD1 = "/rl"
+SlashCmdList["RELOAD"] = function()
+    ReloadUI()
 end
