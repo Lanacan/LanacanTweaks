@@ -12,12 +12,12 @@ ARA_FACTION_COLORS = {
   { r= .4,  g= 0,   b= .6  }, -- past exalted
 }
 
--- FACTION_BAR_COLORS = ARA_FACTION_COLORS
+FACTION_BAR_COLORS = ARA_FACTION_COLORS
 
 function setFontOutline(textObject, outlinestyle)
   local font, size, flags = textObject:GetFont()
 
-  if not outlinestyle then outlinestyle = "THINOUTLINE" end
+  if not outlinestyle then outlinestyle = "OUTLINE" end -- Changed from THINOUTLINE to OUTLINE for Classic
 
   textObject:SetFont(font, size, outlinestyle)
 end
@@ -31,41 +31,40 @@ end
 function setDefaultFont(textObject, size, outlinestyle)
   if not textObject then return end
   if not size then size = 12 end
-  if not outlinestyle then outlinestyle = "THINOUTLINE" end
+  if not outlinestyle then outlinestyle = "OUTLINE" end -- Changed from THINOUTLINE to OUTLINE for Classic
 
   textObject:SetFont("Fonts\\FRIZQT__.TTF", size, outlinestyle)
 end
 
 function createStatusBar(name, parentFrame, width, height, color)
-  local barBorder = CreateFrame("Frame", (name .. "Border"), parentFrame, "BackdropTemplate")
-	barBorder:SetFrameLevel(0)
-	barBorder:SetFrameStrata("low")
-	barBorder:SetSize(width, height)
-	barBorder:SetScale(1)
+  local barBorder = CreateFrame("Frame", (name .. "Border"), parentFrame)
+  barBorder:SetFrameLevel(0)
+  barBorder:SetFrameStrata("LOW")
+  barBorder:SetSize(width, height)
+  barBorder:SetScale(1)
 
-	barBorder.backdropInfo = {
-		edgeFile = SQUARE_TEXTURE,
-		tile = false, tileSize = 0, edgeSize = 2,
-		insets = { left = 0, right = 0, top = 0, bottom = 0 }
-  }
-  barBorder:ApplyBackdrop()
-	barBorder:SetBackdropBorderColor(0,0,0,1)
-	barBorder:Show()
+  -- Simplified backdrop for Classic
+  barBorder:SetBackdrop({
+    bgFile = SQUARE_TEXTURE,
+    edgeFile = SQUARE_TEXTURE,
+    tile = false, tileSize = 0, edgeSize = 2,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 }
+  })
+  barBorder:SetBackdropBorderColor(0,0,0,1)
+  barBorder:Show()
 
-	local statusBar = CreateFrame("StatusBar", (name .. "Bar"), barBorder)
-	statusBar:SetOrientation("Vertical")
-	statusBar:SetPoint("CENTER", 0, 0)
-	local tex = statusBar:CreateTexture()
-	tex:SetTexture(137012) -- "Interface\\TargetingFrame\\UI-StatusBar"
-	statusBar:SetStatusBarTexture(tex)
-	statusBar:SetSize(barBorder:GetWidth() - 4, barBorder:GetHeight() - 2)
-	statusBar:SetStatusBarColor(color.r, color.g, color.b, 1)
+  local statusBar = CreateFrame("StatusBar", (name .. "Bar"), barBorder)
+  statusBar:SetOrientation("VERTICAL")
+  statusBar:SetPoint("CENTER", 0, 0)
+  statusBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+  statusBar:SetSize(barBorder:GetWidth() - 4, barBorder:GetHeight() - 2)
+  statusBar:SetStatusBarColor(color.r, color.g, color.b, 1)
 
-	local bg = statusBar:CreateTexture(nil, "BACKGROUND")
-	bg:SetAllPoints(statusBar)
-	bg:SetColorTexture(0, 0, 0, 0.7)
+  local bg = statusBar:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(statusBar)
+  bg:SetTexture(0, 0, 0, 0.7)
 
-	barBorder.Status = statusBar
+  barBorder.Status = statusBar
   return barBorder
 end
 

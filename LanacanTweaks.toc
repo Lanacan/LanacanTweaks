@@ -1,27 +1,29 @@
-## Interface: 100000
+## Interface: 11506
 ## Title: |cFFFFFFFFLanacan|r|cffa335eeTweaks|r  
-## Notes: These are various small scripts or simple addons I use and packaged into one place as they do not need to be updated often.
-## Author: Not me, I stole or borrowed all this from others. 
+## Notes: Various small scripts and simple addons packaged together.
+## Author: Not me, I stole or borrowed all this from others and put it into one place.
+## Version: 1.0.0 - Classic
+## OptionalDeps: 
 
 Common.lua
-NamePlates.lua
-Vehicle.lua
 
-Misc\AutoKeystone.lua
-Misc\CleanerLootMessages.lua
-Misc\EasyDelete.lua
-Misc\FasterLoot.lua
-Misc\FatalUnitFrames.lua
-Misc\FatalArenaFrames.lua
-Misc\Fixes.lua
-Misc\LFGTimer.lua
-Misc\HealthBarColorTooltip.lua
-Misc\SafeQueue.lua
-Misc\Stats.lua
-Misc\tullaRange.lua
-Misc\UIScale.lua
-Misc\UnitFramesImproved.lua
-Misc\NamePlates.lua
-Misc\Vehicle.lua
+Core/Auras.lua
+Core/Buffs.lua
+Core/Castbars.lua
+Core/Chat.lua
+Core/Minimap.lua
+Core/ToolTip.lua
+Core/UnitFrames.lua
+Core/Vehicle.lua
+Core/NamePlates.lua
+Core/RaidFrameReSizer.lua
 
+Misc/CleanerLootMessages.lua
+Misc/EasyDelete.lua
+Misc/FasterLoot.lua
+Misc/Fixes.lua
+Misc/Stats.lua
+Misc/TrainerFilterFix.lua
+Misc/UIScale.lua
+Misc/XPBar.lua
 

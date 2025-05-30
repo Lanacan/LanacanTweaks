@@ -1,125 +1,118 @@
+-- Backdrop settings for buff frame borders
+-- Defines a simple border style to be used as shadow/backdrop around buff/debuff icons
 local backdrop = {
-  bgFile = nil,
-  edgeFile = "Interface\\BUTTONS\\WHITE8X8",
-  tile = false,
-  tileSize = 32,
-  edgeSize = 1,
-  insets = {
-    left = 0,
-    right = 0,
-    top = 0,
-    bottom = 0,
-  },
+  bgFile = nil,                               -- No background texture, only border
+  edgeFile = "Interface\\Buttons\\WHITE8X8", -- White square texture for border edges
+  tile = false,                               -- Don't tile the edge texture
+  tileSize = 32,                              -- Size for tiling if enabled (not used here)
+  edgeSize = 1,                               -- Border thickness of 1 pixel
+  insets = { left = 0, right = 0, top = 0, bottom = 0 }, -- No inset padding
 }
 
+-- Applies visual styling to a buff/debuff button
+-- This function customizes appearance by:
+-- - resizing the button
+-- - cropping and repositioning the icon texture
+-- - coloring the border (purple for weapon enchants, black for regular buffs)
+-- - adding a shadow/backdrop frame behind the button
 local function applySkin(b)
-  if not b or (b and b.styled) then return end
+  if not b or b.styled then return end  -- Exit if button is nil or already styled
 
   local name = b:GetName()
+  if not name then return end            -- Exit if button has no name
 
-  local tempenchant, consolidated, debuff, buff = false, false, false, false
-  if (name:match("TempEnchant")) then
-    tempenchant = true
-  elseif (name:match("Consolidated")) then
-    consolidated = true
-  elseif (name:match("Debuff")) then
-    debuff = true
-  else
-    buff = true
-  end
+  -- Determine if this button is a temporary weapon enchant or a debuff by name pattern
+  local tempenchant = name:match("TempEnchant") ~= nil
+  local debuff = name:match("Debuff") ~= nil
 
-  --button
+  -- Set fixed button size to ensure uniform appearance
   b:SetSize(32, 32)
 
-  --icon
-  local icon = _G[name.."Icon"]
-  if consolidated then
-    if select(1,UnitFactionGroup("player")) == "Alliance" then
-      icon:SetTexture(select(3,GetSpellInfo(61573)))
-    elseif select(1,UnitFactionGroup("player")) == "Horde" then
-      icon:SetTexture(select(3,GetSpellInfo(61574)))
-    end
+  -- Icon styling: crop and reposition to fit nicely within button borders
+  local icon = _G[name .. "Icon"]
+  if icon then
+    icon:SetTexCoord(0.1, 0.9, 0.1, 0.9) -- Crop edges for a cleaner look
+    icon:ClearAllPoints()
+    icon:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -2)     -- Small offset for padding
+    icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -2, 2)
   end
-
-  icon:SetTexCoord(0.1,0.9,0.1,0.9)
-  icon:ClearAllPoints()
-  icon:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -2)
-  icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -2, 2)
-  -- icon:SetDrawLayer("BACKGROUND",-8)
   b.icon = icon
 
-  --border
-  local border = _G[name.."Border"] or b:CreateTexture(name.."Border", "BACKGROUND", nil, -7)
-  border:SetTexture("Interface\\BUTTONS\\WHITE8X8")
-  border:SetTexCoord(0,1,0,1)
-  border:SetDrawLayer("BACKGROUND",-7)
+  -- Border texture creation or retrieval
+  local border = _G[name .. "Border"] or b:CreateTexture(name .. "Border", "BACKGROUND", nil, -7)
+  border:SetTexture("Interface\\Buttons\\WHITE8X8") -- Use white square texture for border
+  border:SetTexCoord(0, 1, 0, 1)
+  border:SetDrawLayer("BACKGROUND", -7)             -- Draw behind most UI elements
+
+  -- Set border color depending on buff type:
+  -- Purple for weapon temporary enchants, black for normal buffs
   if tempenchant then
-    border:SetVertexColor(0.7,0,1)
+    border:SetVertexColor(0.7, 0, 1) -- Purple
   elseif not debuff then
-    border:SetVertexColor(0,0,0)
+    border:SetVertexColor(0, 0, 0)   -- Black
   end
-  border:ClearAllPoints()
-  border:SetAllPoints(b)
+  border:SetAllPoints(b)               -- Make border cover entire button area
   b.border = border
 
-  --duration
-  -- b.duration:ClearAllPoints()
-  -- b.duration:SetPoint("TOP",0,0)
+  -- Shadow/backdrop frame behind the buff button for visual depth
+  local shadow = CreateFrame("Frame", nil, b, BackdropTemplateMixin and "BackdropTemplate")
+  shadow:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
+  shadow:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0)
+  shadow:SetFrameLevel(b:GetFrameLevel() - 1) -- Place behind the buff button
+  shadow:SetBackdrop(backdrop)                 -- Apply the border backdrop style
+  shadow:SetBackdropBorderColor(0, 0, 0, 1)   -- Solid black border color
+  b.bg = shadow
 
-  --count
-  -- b.count:ClearAllPoints()
-  -- b.count:SetPoint("CENTER",0,0)
-
-  --shadow
-  local back = CreateFrame("Frame", nil, b, "BackdropTemplate")
-  back:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
-  back:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0)
-  back:SetFrameLevel(b:GetFrameLevel() - 1)
-  back.backdropInfo = backdrop
-  back:ApplyBackdrop()
-  back:SetBackdropBorderColor(0,0,0,1)
-  b.bg = back
-
-  --set button styled variable
-  b.styled = true
+  b.styled = true -- Mark button as styled to avoid redundant styling
 end
 
+-- Updates all buff button anchors and applies skins
+-- Loops through all displayed buffs and temporary weapon enchants
+-- Applies our custom skin styling to any buttons not already styled
 local function updateAllBuffAnchors()
-    --variables
-    local buttonName  = "BuffButton"
-    local numEnchants = BuffFrame.numEnchants
-    local numBuffs    = BUFF_ACTUAL_DISPLAY
-    local offset      = numEnchants
-    local realIndex, previousButton, aboveButton
-
-    --calculate the previous button in case tempenchant or consolidated buff are loaded
-    if BuffFrame.numEnchants > 0 then
-      previousButton = _G["TempEnchant"..numEnchants]
+  local numBuffs = BUFF_ACTUAL_DISPLAY or 0 -- Number of buffs currently displayed
+  for i = 1, numBuffs do
+    local button = _G["BuffButton" .. i]
+    if button and not button.styled then
+      applySkin(button)
     end
+  end
 
-    if numEnchants > 0 then
-      aboveButton = TempEnchant1
+  -- Handle temporary weapon enchants (like sharpening stones or poisons)
+  for i = 1, (BuffFrame.numEnchants or 0) do
+    local button = _G["TempEnchant" .. i]
+    if button and not button.styled then
+      applySkin(button)
     end
-
-    --loop on all active buff buttons
-    for index = 1, numBuffs do
-      local button = _G[buttonName..index]
-      if not button then return end
-      if not button.consolidated then
-        --apply skin
-        if not button.styled then applySkin(button) end
-      end
-    end
+  end
 end
 
-local function updateDebuffAnchors(buttonName,index)
-    local button = _G[buttonName..index]
-    if not button then return end
-
-    --apply skin
-    if not button.styled then applySkin(button) end
+-- Updates debuff button anchors and applies skins
+-- Called when debuff buttons are updated, styling any new debuff buttons found
+local function updateDebuffAnchors(name, i)
+  local button = _G[name .. i]
+  if button and not button.styled then
+    applySkin(button)
+  end
 end
 
+-- Positions the entire buff frame near the minimap
+-- Clears existing positioning and sets a fixed position and scale near the Minimap frame
+local function positionBuffFrame()
+  BuffFrame:ClearAllPoints()
+  BuffFrame:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -10, 2)
+  BuffFrame:SetScale(1)
+end
 
+-- Hook into Blizzard's functions to apply our custom styling dynamically
+-- Hooks into buff and debuff update functions to apply skins automatically
 hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
 hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
+
+-- Initialize styling and positioning on player entering the world
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", function()
+  positionBuffFrame()    -- Position buff frame near minimap on login
+  updateAllBuffAnchors() -- Apply skins to all existing buffs on login
+end)

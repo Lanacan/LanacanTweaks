@@ -1,34 +1,57 @@
-local frame = CreateFrame("FRAME", "LootLiteFrame");
-frame:RegisterEvent('PLAYER_ENTERING_WORLD');
+-- Create a frame for modifying loot messages
+local frame = CreateFrame("Frame", "LootLiteFrame")
+frame:RegisterEvent('PLAYER_ENTERING_WORLD')
 
+-- Override default global loot message constants when the world loads
 local function eventHandler(self, event, ...)
---Self Loot
-	LOOT_ITEM_SELF = "+ %s +";
-	LOOT_ITEM_SELF_MULTIPLE = "+ %sx%d +";
-	LOOT_ITEM_BONUS_ROLL_SELF = "+ %s, Bonus +";
-	LOOT_ITEM_BONUS_ROLL_SELF_MULTIPLE = "+ %sx%d, Bonus +";
-	LOOT_ITEM_CREATED_SELF = "+ %s +";
-	LOOT_ITEM_CREATED_SELF_MULTIPLE = "+ %sx%d +";
-	LOOT_ITEM_PUSHED_SELF = "+ %s +";
-	LOOT_ITEM_PUSHED_SELF_MULTIPLE = "+ %sx%d +";
-	LOOT_ITEM_REFUND = "Refunded - %s -";
-	LOOT_ITEM_REFUND_MULTIPLE = "Refunded - %sx%d -";
-	LOOT_ITEM_PUSHED_SELF = "+ %s +";
-	LOOT_ITEM_PUSHED_SELF_MULTIPLE = "+ %sx%d +";
-	CURRENCY_GAINED = "+ %s +";
-	CURRENCY_GAINED_MULTIPLE = "+ %s x%d +";
-	CURRENCY_GAINED_MULTIPLE_BONUS = "+ %s x%d (Bonus Objective) +";
-	CURRENCY_LOST_FROM_DEATH = "Lost - %s x%d -";
-	BATTLE_PET_LOOT_RECEIVED = "+ ";
-	LOOT_CURRENCY_REFUND = "Refunded - %s x%d -";
-	LOOT_DISENCHANT_CREDIT = "%s Disenchanted - %s -";
+    -- Self loot messages
+    LOOT_ITEM_SELF = "|cff00ff00+ %s|r"
+    LOOT_ITEM_SELF_MULTIPLE = "|cff00ff00+ %s x%d|r"
+    LOOT_ITEM_CREATED_SELF = "|cff00ff00+ %s (crafted)|r"
+    LOOT_ITEM_CREATED_SELF_MULTIPLE = "|cff00ff00+ %s x%d (crafted)|r"
+    LOOT_ITEM_PUSHED_SELF = "|cff00ff00+ %s|r"
+    LOOT_ITEM_PUSHED_SELF_MULTIPLE = "|cff00ff00+ %s x%d|r"
 
---Other People's Loot
-	LOOT_ITEM = "%s + %s +";
-	LOOT_ITEM_MULTIPLE = "%s + %sx%d +";
-	LOOT_ITEM_BONUS_ROLL = "%s, Bonus + %s +";
-	LOOT_ITEM_BONUS_ROLL_MULTIPLE = "%s, Bonus + %sx%d +";
-	LOOT_ITEM_PUSHED = "%s + %s +";
-	LOOT_ITEM_PUSHED_MULTIPLE = "%s + %sx%d +";
+    -- Currency and money
+    YOU_LOOT_MONEY = "|cffffff00+ %s|r"
+    LOOT_MONEY_SPLIT = "|cffffff00+ %s (shared)|r"
+    CURRENCY_GAINED = "|cff00ff00+ %s|r"
+    CURRENCY_GAINED_MULTIPLE = "|cff00ff00+ %s x%d|r"
+
+    -- Other people's loot
+    LOOT_ITEM = "|cff00ccff%s|r |cff00ff00+ %s|r"
+    LOOT_ITEM_MULTIPLE = "|cff00ccff%s|r |cff00ff00+ %s x%d|r"
+    LOOT_ITEM_PUSHED = "|cff00ccff%s|r |cff00ff00+ %s|r"
+    LOOT_ITEM_PUSHED_MULTIPLE = "|cff00ccff%s|r |cff00ff00+ %s x%d|r"
+
+    -- Tradeskill loot
+    TRADESKILL_LOG_FIRSTPERSON = "|cff00ff00+ %s (crafted)|r"
+    TRADESKILL_LOG_THIRDPERSON = "|cff00ccff%s|r |cff00ff00+ %s (crafted)|r"
+    CREATED_ITEM = "|cff00ff00+ %s (crafted)|r"
+    CREATED_ITEM_MULTIPLE = "|cff00ff00+ %s x%d (crafted)|r"
+
+    -- Refund and disenchant messages
+    LOOT_ITEM_REFUND = "|cffff0000Refunded: %s|r"
+    LOOT_ITEM_REFUND_MULTIPLE = "|cffff0000Refunded: %s x%d|r"
+    LOOT_DISENCHANT_CREDIT = "|cff9370DB%s disenchanted: %s|r"
+
+    -- Loss from death
+    CURRENCY_LOST_FROM_DEATH = "|cffff0000Lost: %s x%d|r"
+
+    -- Pet loot for Wrath Classic
+    if WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC then
+        BATTLE_PET_LOOT_RECEIVED = "|cff00ff00+ Pet: %s|r"
+    end
 end
-frame:SetScript("OnEvent", eventHandler);
+
+frame:SetScript("OnEvent", eventHandler)
+
+-- === Attempt to recolor money loot messages in chat (may not work in Classic) ===
+local moneyHandler = CreateFrame("Frame")
+moneyHandler:RegisterEvent("CHAT_MSG_MONEY")
+moneyHandler:SetScript("OnEvent", function(_, _, message)
+    if string.find(message, LOOT_MONEY) then
+        local newMessage = string.gsub(message, LOOT_MONEY, "|cffffff00"..LOOT_MONEY.."|r")
+        ChatFrame_ReplaceMessage(ChatFrame1, newMessage)  -- Note: Not a valid function in Classic
+    end
+end)

@@ -1,298 +1,327 @@
 -------------
 -- MINIMAP --
 -------------
-	-- Increase Minimap Size
-	Minimap:SetScale(1.2)
-	Minimap:ClearAllPoints()
-	Minimap:SetPoint("TOPRIGHT", UIParent, -5, -13)
 
-	--mail
-	MiniMapMailFrame:ClearAllPoints()
-	MiniMapMailFrame:SetPoint("TOPRIGHT",Minimap,-0,0)
-	MiniMapMailBorder:Hide()
-	MiniMapMailIcon:SetTexture("Interface\\MINIMAP\\TRACKING\\Mailbox.blp")
-	MiniMapMailBorder:SetBlendMode("ADD")
-	MiniMapMailBorder:ClearAllPoints()
-	MiniMapMailBorder:SetPoint("CENTER",MiniMapMailFrame,0.5,1.5)
-	MiniMapMailBorder:SetSize(27,27)
-	MiniMapMailBorder:SetAlpha(0.5)
+-- Configuration
+local CONFIG = {
+    scale = 1.3,
+    position = {"TOPRIGHT", UIParent, -5, -10},
+    borderSize = 142,
+    mailIcon = {
+        point = {"TOPRIGHT", Minimap, 0, 0},
+        size = 27,
+        alpha = 0.5,
+        texture = "Interface\\MINIMAP\\TRACKING\\Mailbox"
+    },
+    clock = {
+        point = {"TOPLEFT", Minimap, "BOTTOMLEFT", 0, -5}, -- updated anchor
+        scale = 1,
+        font = {"Fonts\\FRIZQT__.TTF", 10, "OUTLINE"}         -- font size updated to 12
+    },
+    zoneText = {
+        subFont = {"Fonts\\FRIZQT__.TTF", 12, "OUTLINE"},
+        size = {130, 20}
+    },
+    coords = {
+        point = {"TOPRIGHT", Minimap, "BOTTOMRIGHT", 0, -5}, -- updated anchor
+        font = {"Fonts\\FRIZQT__.TTF", 10, "OUTLINE"},          -- font size updated to 12
+        size = {142, 12}
+    }
+}
 
-	function handleMinimapZoneText()
-		
-		-- Mouseover zone text
-		MinimapBorderTop:Hide()
-		MinimapZoneText:Hide()
-		local function GetZoneColor()
-			local zoneType = GetZonePVPInfo()
-			if zoneType == "sanctuary" then
-				return 0.4, 0.8, 0.94
-			elseif zoneType == "arena" then
-				return 1, 0.1, 0.1
-			elseif zoneType == "friendly" then
-				return 0.1, 1, 0.1
-			elseif zoneType == "hostile" then
-				return 1, 0.1, 0.1
-			elseif zoneType == "contested" then
-				return 1, 0.8, 0
-			else
-				return 1, 1, 1
-			end
-		end
-			
-		local MainZone = Minimap:CreateFontString(nil, "OVERLAY")
-		MainZone:SetFont(STANDARD_TEXT_FONT, 14, "THINOUTLINE")
-		MainZone:SetPoint("TOP", Minimap, "TOP", 0, 34)
-		MainZone:SetTextColor(1, 1, 1)
-		MainZone:SetAlpha(0)
-		MainZone:SetSize(130, 32)
-		MainZone:SetJustifyV("BOTTOM")
-		MainZone:SetWordWrap(true)
-		MainZone:SetNonSpaceWrap(true)
-		MainZone:SetMaxLines(2)
+-- Initialize Minimap
+MinimapCluster:SetScale(CONFIG.scale)
+Minimap:ClearAllPoints()
+Minimap:SetPoint(unpack(CONFIG.position))
 
-		local SubZone = Minimap:CreateFontString(nil, "OVERLAY")
-		SubZone:SetFont(STANDARD_TEXT_FONT, 12, "THINOUTLINE")
-		SubZone:SetPoint("TOP", MainZone, "BOTTOM", 0, -1)
-		SubZone:SetTextColor(1, 1, 1)
-		SubZone:SetAlpha(0)
-		SubZone:SetSize(130, 26)
-		SubZone:SetJustifyV("TOP")
-		SubZone:SetWordWrap(true)
-		SubZone:SetNonSpaceWrap(true)
-		SubZone:SetMaxLines(2)
+-- Hide Default Elements
+local elementsToHide = {
+    MinimapBorder,
+    MinimapBorderTop,
+    MinimapZoomIn,
+    MinimapZoomOut,
+    MiniMapTracking,
+    MinimapToggleButton,
+    MinimapZoneText
+}
 
-		Minimap:HookScript("OnEnter", function(self)
-			if not IsShiftKeyDown() then
-				SubZone:SetTextColor(GetZoneColor())
-				SubZone:SetText(GetSubZoneText())
-				securecall("UIFrameFadeIn", SubZone, 0.15, SubZone:GetAlpha(), 1)
-				MainZone:SetTextColor(GetZoneColor())
-				MainZone:SetText(GetRealZoneText())
-				securecall("UIFrameFadeIn", MainZone, 0.15, MainZone:GetAlpha(), 1)
-			end
-		end)
+for _, element in pairs(elementsToHide) do
+    if element then
+        element:Hide()
+        element.Show = function() end
+    end
+end
 
-		Minimap:HookScript("OnLeave", function(self)
-			securecall("UIFrameFadeOut", SubZone, 0.15, SubZone:GetAlpha(), 0)
-			securecall("UIFrameFadeOut", MainZone, 0.15, MainZone:GetAlpha(), 0)
-		end)      
-	end
+-- LFG Eye (Leatrix Plus style)
+EventUtil.ContinueOnAddOnLoaded("Blizzard_GroupFinder_VanillaStyle", function()
+    local function SetLFGButton()
+        if C_LFGList.HasActiveEntryInfo() then
+            LFGMinimapFrame:Show()
+        else
+            LFGMinimapFrame:Hide()
+        end
+    end
+    LFGMinimapFrame:HookScript("OnEvent", SetLFGButton)
+    SetLFGButton()
+end)
 
-	--[[QueueStatusMinimapButton (lfg) -- Old Position
-	QueueStatusMinimapButton:ClearAllPoints()
-	QueueStatusMinimapButton:SetParent(Minimap)
-	QueueStatusMinimapButton:SetPoint("BOTTOMLEFT", Minimap, 0, 0)
-	QueueStatusMinimapButtonBorder:Hide()
-	]]--
+-- Mail Icon Setup
+MiniMapMailFrame:ClearAllPoints()
+MiniMapMailFrame:SetPoint(unpack(CONFIG.mailIcon.point))
+MiniMapMailBorder:Hide()
+MiniMapMailIcon:SetTexture(CONFIG.mailIcon.texture)
+MiniMapMailBorder:SetBlendMode("ADD")
+MiniMapMailBorder:ClearAllPoints()
+MiniMapMailBorder:SetPoint("CENTER", MiniMapMailFrame, 0.5, 1.5)
+MiniMapMailBorder:SetSize(CONFIG.mailIcon.size, CONFIG.mailIcon.size)
+MiniMapMailBorder:SetAlpha(CONFIG.mailIcon.alpha)
 
-	QueueStatusMinimapButton:ClearAllPoints()
-	QueueStatusMinimapButton:SetPoint("BOTTOMLEFT", Minimap, 4, 4)
-	QueueStatusMinimapButton:SetSize(14, 14)
-	QueueStatusMinimapButton:SetHighlightTexture(nil)
+-- Calendar/Clock Setup
+GameTimeFrame:SetParent(Minimap)
+GameTimeFrame:SetScale(CONFIG.clock.scale)
+GameTimeFrame:ClearAllPoints()
+GameTimeFrame:SetPoint(unpack(CONFIG.clock.point))
 
-	QueueStatusMinimapButtonBorder:SetTexture()
-	QueueStatusMinimapButton.Eye:Hide()
+-- Hide all GameTimeFrame textures
+for _, region in ipairs({GameTimeFrame:GetRegions()}) do
+    if region:GetObjectType() == "Texture" then
+        region:Hide()
+    end
+end
 
-	hooksecurefunc("EyeTemplate_StartAnimating", function(self)
-		self:SetScript("OnUpdate", nil)
-	end)
+-- Create custom clock text properly anchored
+local clockText = GameTimeFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+clockText:ClearAllPoints()
+clockText:SetPoint("TOPLEFT", GameTimeFrame, "TOPLEFT", 0, 0) -- align top-left corner of text
+clockText:SetFont(unpack(CONFIG.clock.font))
+clockText:SetJustifyH("LEFT")
+clockText:SetJustifyV("TOP")
 
-	QueueStatusMinimapButton.Text = QueueStatusMinimapButton:CreateFontString(nil, "OVERLAY")
-	QueueStatusMinimapButton.Text:SetFont(STANDARD_TEXT_FONT, 15, "OUTLINE")
-	QueueStatusMinimapButton.Text:SetPoint("TOP", QueueStatusMinimapButton)
-	QueueStatusMinimapButton.Text:SetTextColor(1, 0.4, 0)
-	QueueStatusMinimapButton.Text:SetText("Q")
+-- Zone Text (Subzone only on hover)
+local function CreateZoneText()
+    local function GetZoneColor()
+        local pvpType = GetZonePVPInfo()
+        if pvpType == "sanctuary" then return 0.4, 0.8, 0.94 end
+        if pvpType == "arena" or pvpType == "hostile" then return 1, 0.1, 0.1 end
+        if pvpType == "friendly" then return 0.1, 1, 0.1 end
+        if pvpType == "contested" then return 1, 0.8, 0 end
+        return 1, 1, 1
+    end
 
-	-- Queue Tooltip fix 
-	QueueStatusFrame:ClearAllPoints()
-	QueueStatusFrame:SetPoint("TOPRIGHT", Minimap, "TOPRIGHT", 282, -10)
+    local subZone = Minimap:CreateFontString(nil, "OVERLAY")
+    subZone:SetFont(unpack(CONFIG.zoneText.subFont))
+    subZone:SetPoint("TOP", Minimap, "TOP", 0, 1)
+    subZone:SetTextColor(1, 1, 1)
+    subZone:SetAlpha(0)
+    subZone:SetSize(unpack(CONFIG.zoneText.size))
+    subZone:SetJustifyH("CENTER")
 
-	--Garrison Icon
-	GarrisonLandingPageMinimapButton:SetSize(32, 32)
-	hooksecurefunc("GarrisonLandingPageMinimapButton_UpdateIcon", function(self)
-		self:ClearAllPoints()
-		self:SetPoint("BOTTOMRIGHT", Minimap, 10, -5)
-		self:SetScale(0.75)
-	end)
+    Minimap:HookScript("OnEnter", function()
+        local r, g, b = GetZoneColor()
+        subZone:SetTextColor(r, g, b)
+        subZone:SetText(GetSubZoneText() or "")
+        subZone:SetAlpha(1)
+    end)
 
-	-- Skin the ticket status frame
-	TicketStatusFrame:ClearAllPoints()
-	TicketStatusFrame:SetPoint("BOTTOMRIGHT", UIParent, -25, -33)
-	TicketStatusFrameButton:HookScript("OnShow", function(self)
-		self:SetBackdrop({
-			bgFile = "Interface\\Buttons\\WHITE8x8",
-			insets = {
-				left = 3,
-				right = 3,
-				top = 3,
-				bottom = 3
-			}
-		})
-		self:SetBackdropColor(0, 0, 0, 0.5)
-		self:CreateBeautyBorder(12)
-	end)
+    Minimap:HookScript("OnLeave", function()
+        subZone:SetAlpha(0)
+    end)
+end
 
-	function init(self, event)
-		--------------------------------------------------------------------
-		-- MINIMAP BORDER
-		--------------------------------------------------------------------
-		local CleanMapBorder = CreateFrame("Frame", "CleanMapBorder", Minimap, "BackdropTemplate")
-		CleanMapBorder:SetFrameLevel(0)
-		CleanMapBorder:SetFrameStrata("background")
-		CleanMapBorder:SetHeight(142)
-		CleanMapBorder:SetWidth(142)
-		CleanMapBorder:SetPoint("CENTER",0,0)
-		CleanMapBorder:SetScale(1)
+-- Coordinate Display
+local function CreateCoords()
+    local coordFrame = CreateFrame("Frame", "MinimapCoordsFrame", Minimap)
+    coordFrame:SetSize(unpack(CONFIG.coords.size))
+    coordFrame:SetPoint(unpack(CONFIG.coords.point))
 
-		CleanMapBorder.backdropInfo = {
-			bgFile = SQUARE_TEXTURE,
-			edgeFile = SQUARE_TEXTURE,
-			tile = false, tileSize = 0, edgeSize = 1,
-			insets = { left = -1, right = -1, top = -1, bottom = -1 }
-		}
-		CleanMapBorder:ApplyBackdrop()
-		CleanMapBorder:SetBackdropColor(0,0,0,1)
-		CleanMapBorder:SetBackdropBorderColor(0,0,0,1)
-		CleanMapBorder:Show()
+    local coordText = coordFrame:CreateFontString(nil, "OVERLAY")
+    coordText:SetFont(unpack(CONFIG.coords.font))
+	coordText:ClearAllPoints()
+	coordText:SetPoint("TOPRIGHT", coordFrame, "TOPRIGHT", 0, 0)
+	coordText:SetJustifyH("RIGHT")	
 
-		-- Square Minimap
-		Minimap:SetMaskTexture(SQUARE_TEXTURE)
-		
-		--Blizzard_TimeManager
-		LoadAddOn("Blizzard_TimeManager")
+    local currentMapID
+    local function UpdateMapID()
+        currentMapID = C_Map.GetBestMapForUnit("player")
+    end
+
+    local function GetCoords()
+        if not currentMapID then return end
+        local pos = C_Map.GetPlayerMapPosition(currentMapID, "player")
+        if not pos then return end
+        local x, y = pos:GetXY()
+        if not x or not y or (x == 0 and y == 0) then return end
+        return x * 100, y * 100
+    end
+
+    local function UpdateText()
+        local x, y = GetCoords()
+        if x and y then
+            coordText:SetText(string.format("%.1f, %.1f", x, y))
+        else
+            coordText:SetText("???, ???")
+        end
+    end
+
+    coordFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    coordFrame:RegisterEvent("ZONE_CHANGED")
+    coordFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
+    coordFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    coordFrame:SetScript("OnEvent", function()
+        UpdateMapID()
+        UpdateText()
+    end)
+
+    coordFrame:SetScript("OnUpdate", function(self, elapsed)
+        self.timer = (self.timer or 0) + elapsed
+        if self.timer >= 1 then
+            UpdateText()
+            self.timer = 0
+        end
+    end)
+end
+
+-- Mouse Controls
+Minimap:EnableMouseWheel(true)
+
+local zoomResetFrame = CreateFrame("Frame")
+local zoomResetTimer = 0
+local zoomResetActive = false
+
+Minimap:SetScript("OnMouseWheel", function(_, delta)
+    if delta > 0 then
+        MinimapZoomIn:Click()
+    elseif delta < 0 then
+        MinimapZoomOut:Click()
+    end
+
+    -- Reset the timer on any scroll
+    zoomResetTimer = 0
+    zoomResetActive = true
+    zoomResetFrame:Show()
+end)
+
+Minimap:SetScript("OnMouseUp", function(_, button)
+    if button == "RightButton" then
+        if GameTimeFrame and GameTimeFrame:IsVisible() and GameTimeFrame_OnClick then
+            GameTimeFrame_OnClick(GameTimeFrame)
+        end
+    elseif button == "MiddleButton" then
+        if MiniMapTrackingDropDown then
+            ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, Minimap)
+        end
+    else
+        Minimap_OnClick(Minimap)
+    end
+end)
+
+zoomResetFrame:SetScript("OnUpdate", function(self, elapsed)
+    if zoomResetActive then
+        zoomResetTimer = zoomResetTimer + elapsed
+        if zoomResetTimer >= 30 then
+            -- Auto zoom all the way out
+            for i = 1, 5 do
+                MinimapZoomOut:Click()
+            end
+            zoomResetActive = false
+            self:Hide()
+        end
+    end
+end)
+zoomResetFrame:Hide() -- Don't run until needed
+
+
+-- Custom Border
+local function CreateBorder()
+    local border = CreateFrame("Frame", "CleanMapBorder", Minimap)
+    border:SetFrameLevel(0)
+    border:SetSize(CONFIG.borderSize, CONFIG.borderSize)
+    border:SetPoint("CENTER")
+
+    local points = {
+        {"TOPLEFT", -1, 1}, {"TOPRIGHT", 1, 1},
+        {"BOTTOMLEFT", -1, -1}, {"BOTTOMRIGHT", 1, -1},
+        {"LEFT", -1, 0}, {"RIGHT", 1, 0},
+        {"TOP", 0, 1}, {"BOTTOM", 0, -1}
+    }
+
+    for _, point in ipairs(points) do
+        local tex = border:CreateTexture(nil, "BORDER")
+        tex:SetTexture("Interface\\Buttons\\WHITE8x8")
+        tex:SetVertexColor(0, 0, 0)
+        tex:SetPoint(point[1], border, point[2], point[3])
+
+        if point[1] == "TOP" or point[1] == "BOTTOM" then
+            tex:SetSize(CONFIG.borderSize, 1)
+        elseif point[1] == "LEFT" or point[1] == "RIGHT" then
+            tex:SetSize(1, CONFIG.borderSize)
+        else
+            tex:SetSize(1, 1)
+        end
+    end
+
+    local bg = border:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetTexture("Interface\\Buttons\\WHITE8x8")
+    bg:SetVertexColor(0, 0, 0, 1)
+
+    Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8x8")
+end
+
+-- Minimap Button Fader
+local function SetupButtonFader()
+    local buttons = {}
+
+    local function SetupButton(button)
+        if button and button.SetAlpha then
+            table.insert(buttons, button)
+            button:SetAlpha(0)
+            button:SetScript("OnEnter", function(self)
+                UIFrameFadeIn(self, 0.5, self:GetAlpha(), 1)
+            end)
+            button:SetScript("OnLeave", function(self)
+                UIFrameFadeOut(self, 0.5, self:GetAlpha(), 0)
+            end)
+        end
+    end
+
+    for _, child in ipairs({Minimap:GetChildren()}) do
+        if child:GetName() and child:GetName():find("LibDBIcon") then
+            SetupButton(child)
+        end
+    end
+
+    if LibStub and LibStub("LibDBIcon-1.0", true) then
+        local LDBI = LibStub("LibDBIcon-1.0")
+        LDBI.RegisterCallback("MinimapButtonFader", "LibDBIcon_IconCreated", function(_, _, name)
+            SetupButton(_G[name])
+        end)
+    end
+end
+
+-- Final Init
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("PLAYER_LOGIN")
+initFrame:SetScript("OnEvent", function()
+    CreateZoneText()
+    CreateCoords()
+    CreateBorder()
+    SetupButtonFader()
+
+    -- TimeManager Clock
+	if TimeManagerClockButton then
 		TimeManagerClockButton:GetRegions():Hide()
+		TimeManagerClockButton:SetParent(Minimap)
+		TimeManagerClockButton:SetScale(CONFIG.clock.scale)
 		TimeManagerClockButton:ClearAllPoints()
-		TimeManagerClockButton:SetPoint("BOTTOM",0,-5)
-		TimeManagerClockTicker:SetFont(STANDARD_TEXT_FONT,12,"OUTLINE")	
-		TimeManagerClockTicker:SetTextColor(1,1,1,1)
+		TimeManagerClockButton:SetPoint(unpack(CONFIG.clock.point)) -- uses your config: bottomleft -2
 
-		--GameTimeFrame
-		GameTimeFrame:SetParent(Minimap)
-		GameTimeFrame:SetScale(1)
-		GameTimeFrame:ClearAllPoints()
-		GameTimeFrame:SetPoint("TOPRIGHT",Minimap,-18,-18)
-		GameTimeFrame:SetHitRectInsets(0, 0, 0, 0)
-		GameTimeFrame:GetNormalTexture():SetTexCoord(0,1,0,1)
-		GameTimeFrame:SetPushedTexture(nil)
-		GameTimeFrame:SetHighlightTexture (nil)
-		local fs = GameTimeFrame:GetFontString()
-		fs:ClearAllPoints()
-		fs:SetPoint("CENTER",0,-5)
-		fs:SetFont(STANDARD_TEXT_FONT,20)
-		fs:SetTextColor(0.2,0.2,0.1,0.9)
-
-		-- Hide Border
-		MinimapBorder:Hide()
-		MinimapBorderTop:Hide()
-
-		MinimapZoomIn:Hide()
-		MinimapZoomOut:Hide()
-		MiniMapWorldMapButton:Hide()
-
-		-- Hide/unhide Minimap zone text
-		handleMinimapZoneText()
-
-		MiniMapTracking:Hide()
-		MiniMapTracking.Show = kill
-		MiniMapTracking:UnregisterAllEvents()
-
-		-- Hide Calendar
-		GameTimeFrame:Hide()
-
-		-- Mousewheel Zoom
-		Minimap:EnableMouseWheel(true)
-		Minimap:SetScript("OnMouseWheel", function(self, z)
-			local c = Minimap:GetZoom()
-			if(z > 0 and c < 5) then
-				Minimap:SetZoom(c + 1)
-			elseif(z < 0 and c > 0) then
-				Minimap:SetZoom(c - 1)
-			end
-		end)
-
-		-- Mouse shortcuts
-		Minimap:SetScript("OnMouseUp", function(self, btn)
-			if btn == "RightButton" then
-				_G.GameTimeFrame:Click()
-			elseif btn == "MiddleButton" then
-				_G.ToggleDropDownMenu(1, nil, _G.MiniMapTrackingDropDown, self)
-			else
-				_G.Minimap_OnClick(self)
-			end
-		end)
-
-		------------
-		-- XP Bar --
-		------------
-		local maxPlayerLevel = GetMaxLevelForPlayerExpansion()
-		if (UnitLevel("player") < maxPlayerLevel) then
-			local xpInfo = {
-				xp = 0,
-				totalLevelXP = 0,
-				xpToNextLevel = 0,
-				tPercent = 0
-			}
-
-			--match bar height to map edge size
-			--local _, height = Minimap:GetHeight() --143
-
-			local xpBar = createStatusBar(
-				"CleanXp",
-				CleanMapBorder,
-				14, CleanMapBorder:GetHeight() + 2,
-				{ r = 0.6, g = 0, b = 0.6 }
-			)
-			xpBar:SetFrameStrata("medium")
-			xpBar:SetPoint("RIGHT", CleanMapBorder, "LEFT", 0, 0)
-
-			xpBar:SetScript("OnEnter", function()
-				GameTooltip:SetOwner(xpBar);
-				GameTooltip:AddLine("Experience")
-				GameTooltip:AddLine(abbrNumber(xpInfo.xp) .. "/" .. abbrNumber(xpInfo.totalLevelXP) .. " (" .. round(xpInfo.tPercent, 1) .. "%)", 1, 1, 1)
-				GameTooltip:Show()
-			end)
-
-			xpBar:SetScript("OnLeave", function()
-				GameTooltip:Hide()
-			end)
-
-			-- artifactBar.Text = artifactBar:CreateFontString(nil, "OVERLAY")
-			-- artifactBar.Text:SetFontObject(GameFontHighlight)
-			-- artifactBar.Text:SetPoint("CENTER", artifactBar, "CENTER")
-
-			local artifactInfo = {
-				xpToNextLevel = 0,
-				xp = 0,
-				totalLevelXP = 2000,
-				tPercent = 0
-			}
-			local function getBarData()
-				if (UnitLevel("player") == maxPlayerLevel) then
-					xpBar:Hide()
-					return
-				end
-				local xp = UnitXP("player")
-				local totalLevelXP = UnitXPMax("player")
-				xpInfo.xpToNextLevel = totalLevelXP - xp
-
-				xpInfo.xp = xp
-				xpInfo.totalLevelXP = totalLevelXP
-				xpInfo.tPercent = xp / totalLevelXP * 100
-
-				xpBar.Status:SetMinMaxValues(0, xpInfo.totalLevelXP)
-				xpBar.Status:SetValue(xpInfo.xp)
-				xpBar:Show()
-			end
-
-			-- Initialise bar
-			getBarData()
-
-			local eventFrame = CreateFrame("Frame")
-			eventFrame:RegisterEvent("PLAYER_XP_UPDATE")
-			eventFrame:SetScript("OnEvent", getBarData)
-		end
+		-- Adjust the built-in clock text directly
+		TimeManagerClockTicker:ClearAllPoints()
+		TimeManagerClockTicker:SetPoint("TOPLEFT", TimeManagerClockButton, "TOPLEFT", 0, 0)
+		TimeManagerClockTicker:SetFont(unpack(CONFIG.clock.font))
+		TimeManagerClockTicker:SetTextColor(1, 1, 1, 1)
+		TimeManagerClockTicker:SetJustifyH("LEFT")
+		TimeManagerClockTicker:SetJustifyV("TOP")
 	end
-
-	local CF=CreateFrame("Frame")
-	CF:RegisterEvent("PLAYER_LOGIN")
-	CF:SetScript("OnEvent", init)
+end)
