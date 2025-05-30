@@ -11,6 +11,7 @@ Core/Auras.lua
 Core/Buffs.lua
 Core/Castbars.lua
 Core/Chat.lua
+Core/ChatCopy.lua
 Core/Minimap.lua
 Core/ToolTip.lua
 Core/UnitFrames.lua
@@ -18,10 +19,11 @@ Core/Vehicle.lua
 Core/NamePlates.lua
 Core/RaidFrameReSizer.lua
 
-Misc/CleanerLootMessages.lua
+##Misc/CleanerLootMessages.lua
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
 Misc/Fixes.lua
+Misc/LootLite.lua
 Misc/Stats.lua
 Misc/TrainerFilterFix.lua
 Misc/UIScale.lua
