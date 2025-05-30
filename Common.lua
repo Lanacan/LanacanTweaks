@@ -12,7 +12,7 @@ ARA_FACTION_COLORS = {
   { r= .4,  g= 0,   b= .6  }, -- past exalted
 }
 
-FACTION_BAR_COLORS = ARA_FACTION_COLORS
+--FACTION_BAR_COLORS = ARA_FACTION_COLORS
 
 function setFontOutline(textObject, outlinestyle)
   local font, size, flags = textObject:GetFont()
