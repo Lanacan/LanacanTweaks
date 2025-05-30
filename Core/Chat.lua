@@ -67,8 +67,8 @@ frame:SetScript("OnEvent", function(self, event)
         local editbox = _G[name.."EditBox"]
         if editbox then
             editbox:ClearAllPoints()
-            editbox:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", -7, 25)
-            editbox:SetPoint("BOTTOMRIGHT", ChatFrame1, "TOPRIGHT", 10, 25)
+            editbox:SetPoint("BOTTOMLEFT", ChatFrame1, "TOPLEFT", -7, 15)
+            editbox:SetPoint("BOTTOMRIGHT", ChatFrame1, "TOPRIGHT", 10, 15)
             editbox:SetAltArrowKeyMode(false)
         end
 
@@ -109,6 +109,9 @@ frame:SetScript("OnEvent", function(self, event)
         local chatFrame = _G["ChatFrame"..i]
         if chatFrame then
             ProcessFrame(chatFrame)
+			
+			chatFrame:SetClampRectInsets(-10, 10, 0, 0)  -- moves left and right clamp 10 pixels outside screen edges
+			chatFrame:SetClampedToScreen(true)
 
             local tab = _G["ChatFrame"..i.."Tab"]
             if tab then
@@ -165,15 +168,39 @@ for _, event in pairs({
     "CHAT_MSG_BATTLEGROUND", "CHAT_MSG_BATTLEGROUND_LEADER",
     "CHAT_MSG_CHANNEL", "CHAT_MSG_SYSTEM"
 }) do
-    ChatFrame_AddMessageEventFilter(event, function(self, event, str, ...)
-        for _, pattern in pairs(urlPatterns) do
-            local result, match = gsub(str, pattern, "|cff0394ff|Hurl:%1|h[%1]|h|r")
-            if match > 0 then
-                return false, result, ...
-            end
+    ChatFrame_AddMessageEventFilter(event, function(self, event, msg, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter, guid, ...)
+        -- Highlight URLs in message
+        for _, pattern in ipairs(urlPatterns) do
+            msg = msg:gsub(pattern, "|cff0394ff|Hurl:%1|h[%1]|h|r")
         end
+
+        -- Color player names if guid is valid string and sender exists
+        if sender and guid and type(guid) == "string" and guid ~= "0" and guid ~= "" then
+			local _, class = GetPlayerInfoByGUID(guid)
+			if class then
+				local color = RAID_CLASS_COLORS[class]
+				if color then
+					local colorCode = format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
+
+					-- Try to color the player's name in the hyperlink form: |Hplayer:Name|h[Name]|h
+					msg = msg:gsub("(|Hplayer:"..sender.."|h)%[([^%]]+)%]|h", function(prefix, nameInBrackets)
+						return prefix .. "[" .. colorCode .. nameInBrackets .. "|r]|h"
+					end)
+
+					-- Also color plain occurrences of the sender's name (e.g., in trade chat)
+					msg = msg:gsub("(%f[%a])"..sender.."(%f[%A])", colorCode .. sender .. "|r")
+				end
+			end
+		end
+
+
+        -- Return false (do not block) and all original parameters, with updated msg
+        return false, msg, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter, guid, ...
     end)
 end
+
+
+
 
 -- Override the default hyperlink handler to allow clicking URLs and inserting them in chat edit box
 local originalSetHyperlink = ItemRefTooltip.SetHyperlink
@@ -193,3 +220,4 @@ SLASH_RELOAD1 = "/rl"
 SlashCmdList["RELOAD"] = function()
     ReloadUI()
 end
+
