@@ -150,7 +150,6 @@ frame:SetScript("OnEvent", function(self, event)
     end
 end)
 
-
 -- URL highlighting patterns for various URL forms
 local urlPatterns = {
     "(https://%S+%.%S+)",
@@ -193,14 +192,10 @@ for _, event in pairs({
 			end
 		end
 
-
         -- Return false (do not block) and all original parameters, with updated msg
         return false, msg, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter, guid, ...
     end)
 end
-
-
-
 
 -- Override the default hyperlink handler to allow clicking URLs and inserting them in chat edit box
 local originalSetHyperlink = ItemRefTooltip.SetHyperlink
@@ -220,4 +215,3 @@ SLASH_RELOAD1 = "/rl"
 SlashCmdList["RELOAD"] = function()
     ReloadUI()
 end
-
