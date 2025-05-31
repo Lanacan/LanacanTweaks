@@ -1,4 +1,4 @@
-## Interface: 11506
+## Interface: 11507
 ## Title: |cFFFFFFFFLanacan|r|cffa335eeTweaks|r  
 ## Notes: Various small scripts and simple addons packaged together.
 ## Author: Not me, I stole or borrowed all this from others and put it into one place.
