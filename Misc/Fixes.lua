@@ -216,11 +216,5 @@ frame:RegisterEvent("DUEL_REQUESTED")
 frame:RegisterEvent("RESURRECT_REQUEST")
 frame:SetScript("OnEvent", eventHandler)
 
--- === Slash Command to reload UI ===
-SLASH_RELOAD1 = "/rl"
-SlashCmdList["RELOAD"] = function()
-    ReloadUI()
-end
-
 -- === Confirmation ===
-print("|cFF0048ff Fixes|r loaded")
+--print("|cFF0048ff Fixes|r loaded")

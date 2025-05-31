@@ -109,9 +109,9 @@ frame:SetScript("OnEvent", function(self, event)
         local chatFrame = _G["ChatFrame"..i]
         if chatFrame then
             ProcessFrame(chatFrame)
-			
-			chatFrame:SetClampRectInsets(-10, 10, 0, 0)  -- moves left and right clamp 10 pixels outside screen edges
-			chatFrame:SetClampedToScreen(true)
+            
+            chatFrame:SetClampRectInsets(-10, 10, 0, 0)  -- moves left and right clamp 10 pixels outside screen edges
+            chatFrame:SetClampedToScreen(true)
 
             local tab = _G["ChatFrame"..i.."Tab"]
             if tab then
@@ -175,27 +175,39 @@ for _, event in pairs({
 
         -- Color player names if guid is valid string and sender exists
         if sender and guid and type(guid) == "string" and guid ~= "0" and guid ~= "" then
-			local _, class = GetPlayerInfoByGUID(guid)
-			if class then
-				local color = RAID_CLASS_COLORS[class]
-				if color then
-					local colorCode = format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
+            local _, class = GetPlayerInfoByGUID(guid)
+            if class then
+                local color = RAID_CLASS_COLORS[class]
+                if color then
+                    local colorCode = format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
 
-					-- Try to color the player's name in the hyperlink form: |Hplayer:Name|h[Name]|h
-					msg = msg:gsub("(|Hplayer:"..sender.."|h)%[([^%]]+)%]|h", function(prefix, nameInBrackets)
-						return prefix .. "[" .. colorCode .. nameInBrackets .. "|r]|h"
-					end)
+                    -- Try to color the player's name in the hyperlink form: |Hplayer:Name|h[Name]|h
+                    msg = msg:gsub("(|Hplayer:"..sender.."|h)%[([^%]]+)%]|h", function(prefix, nameInBrackets)
+                        return prefix .. "[" .. colorCode .. nameInBrackets .. "|r]|h"
+                    end)
 
-					-- Also color plain occurrences of the sender's name (e.g., in trade chat)
-					msg = msg:gsub("(%f[%a])"..sender.."(%f[%A])", colorCode .. sender .. "|r")
-				end
-			end
-		end
+                    -- Also color plain occurrences of the sender's name (e.g., in trade chat)
+                    msg = msg:gsub("(%f[%a])"..sender.."(%f[%A])", colorCode .. sender .. "|r")
+                end
+            end
+        end
 
         -- Return false (do not block) and all original parameters, with updated msg
         return false, msg, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter, guid, ...
     end)
 end
+
+-- Restore default behavior to open whisper on player name click
+hooksecurefunc("ChatFrame_OnHyperlinkShow", function(frame, link, text, button)
+    if strsub(link, 1, 7) == "player:" then
+        local playerName = strmatch(link, "player:([^:]+)")
+        if playerName then
+            if button == "LeftButton" then
+                ChatFrame_SendTell(playerName, frame)
+            end
+        end
+    end
+end)
 
 -- Override the default hyperlink handler to allow clicking URLs and inserting them in chat edit box
 local originalSetHyperlink = ItemRefTooltip.SetHyperlink

@@ -1,6 +1,11 @@
 -- ChatCopy.lua
 
--- Table to store frames
+-- === CONFIGURATION ===
+local BUTTON_POSITION = { "BOTTOMRIGHT", -4, 4 } -- Position: { anchor point, x offset, y offset }
+local BUTTON_ALPHA_IDLE = 0.15                    -- Button alpha when idle
+local BUTTON_ALPHA_HOVER = 1.0                    -- Button alpha on hover
+-- ======================
+
 local frames = {}
 
 -- Create the copy frame
@@ -33,16 +38,14 @@ editBox:SetMultiLine(true)
 editBox:SetFontObject(ChatFontNormal)
 editBox:SetWidth(550)
 editBox:SetAutoFocus(false)
-editBox:SetScript("OnEscapePressed", function()
-    copyFrame:Hide()
-end)
+editBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)
 scrollFrame:SetScrollChild(editBox)
 
 -- Close Button
 local closeButton = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", copyFrame, "TOPRIGHT")
 
--- Function to extract lines from chat
+-- Extract lines from chat
 local function GetLines(chatFrame)
     local lines = {}
     local numMessages = chatFrame:GetNumMessages()
@@ -55,7 +58,7 @@ local function GetLines(chatFrame)
     return lines
 end
 
--- Function to copy chat
+-- Copy chat contents
 local function CopyChat(chatFrame)
     copyFrame:Show()
     copyFrame:SetFrameStrata("DIALOG")
@@ -73,48 +76,30 @@ local function AddCopyButtonToChatFrame(chatFrame)
     local name = chatFrame:GetName()
     if not name then return end
 
-    --print("ChatCopy: Button added to", name) --For Debuging. 
-
     -- Create the copy button
     local button = CreateFrame("Button", nil, chatFrame)
     button:SetSize(20, 20)
-    button:SetPoint("TOPRIGHT", chatFrame, "TOPRIGHT", -4, -4)
+    button:SetPoint(unpack(BUTTON_POSITION))
     button:SetFrameStrata("HIGH")
     button:SetFrameLevel(1000)
+    button:SetAlpha(BUTTON_ALPHA_IDLE)
     button:SetNormalTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Up")
     button:SetHighlightTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Highlight")
     button:SetPushedTexture("Interface\\Buttons\\UI-GuildButton-PublicNote-Down")
-    button:SetScript("OnClick", function()
-        CopyChat(chatFrame)
-    end)
-    button:Hide()
+    button:SetScript("OnClick", function() CopyChat(chatFrame) end)
 
-    -- Create a transparent overlay frame for mouse detection
-    local hoverFrame = CreateFrame("Frame", nil, chatFrame)
-    hoverFrame:SetAllPoints(chatFrame)
-    hoverFrame:SetFrameStrata("HIGH")
-    hoverFrame:SetFrameLevel(999)
-    hoverFrame:EnableMouse(true)
-    hoverFrame:SetScript("OnEnter", function()
-        button:Show()
+    button:EnableMouse(true)
+    button:SetScript("OnEnter", function()
+        button:SetAlpha(BUTTON_ALPHA_HOVER)
     end)
-    hoverFrame:SetScript("OnLeave", function()
-        if not button:IsMouseOver() then
-            button:Hide()
-        end
-    end)
-
-    -- Ensure button doesn't hide when it's hovered
     button:SetScript("OnLeave", function()
-        if not hoverFrame:IsMouseOver() then
-            button:Hide()
-        end
+        button:SetAlpha(BUTTON_ALPHA_IDLE)
     end)
 
     table.insert(frames, chatFrame)
 end
 
--- Add copy button to all chat windows
+-- Add button to all chat windows
 for i = 1, NUM_CHAT_WINDOWS do
     local frame = _G["ChatFrame" .. i]
     if frame then

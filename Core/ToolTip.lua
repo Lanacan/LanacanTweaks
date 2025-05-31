@@ -12,7 +12,7 @@ local config = {
     border = {0.1,0.1,0.1}, -- Border color RGB of tooltip
     health = { 0, 1, 0 }, -- Default health bar color (green)
     
-    classBorder = true, -- Use class color for border
+    classBorder = false, -- Use class color for border
     classBg = false, -- Use class color for background
     classNames = true, -- Color player names by class
     classHealth = true, -- Color health bar by class
@@ -25,7 +25,7 @@ local config = {
     itemBorder = true, -- Color item tooltips border by quality
     itemBg = false, -- Color item tooltips background by quality
 
-    scale = 1.1, -- Tooltip scale multiplier
+    scale = 1.2, -- Tooltip scale multiplier
 
     font = STANDARD_TEXT_FONT,
     fontHeaderSize = 14,

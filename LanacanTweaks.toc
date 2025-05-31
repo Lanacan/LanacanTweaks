@@ -19,7 +19,6 @@ Core/Vehicle.lua
 Core/NamePlates.lua
 Core/RaidFrameReSizer.lua
 
-##Misc/CleanerLootMessages.lua
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
 Misc/Fixes.lua
