@@ -7,6 +7,7 @@
 
 Common.lua
 
+## CORE TWEAKS ##
 Core/Auras.lua
 Core/Buffs.lua
 Core/Castbars.lua
@@ -19,6 +20,7 @@ Core/Vehicle.lua
 Core/NamePlates.lua
 Core/RaidFrameReSizer.lua
 
+## QOL TWEAKS ##
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
 Misc/Fixes.lua
