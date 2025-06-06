@@ -91,7 +91,7 @@ local function eventHandler(self, event, ...)
             autoSelfCast = 1,
             chatStyle = 'classic',
             lootUnderMouse = 1,
-            screenshotFormat = 'tga',
+            screenshotFormat = 'jpg',
             screenshotQuality = 10,
             scriptErrors = 1,
             trackQuestSorting = 'top',
@@ -125,6 +125,7 @@ local function eventHandler(self, event, ...)
         return
     end
 
+	--[[ Not fully working.... 
     if event == "GOSSIP_SHOW" then
         if IsShiftKeyDown() then return end
 
@@ -150,6 +151,7 @@ local function eventHandler(self, event, ...)
             end
         end
     end
+	]]--
 
     if LossOfControlFrame then
         LossOfControlFrame:ClearAllPoints()
