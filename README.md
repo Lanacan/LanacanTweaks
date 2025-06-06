@@ -18,8 +18,6 @@ Chat
     - Achievements
     - Skill
     - System
-Questing
-  - Skip Gossip (Can hold Shift to prevent skipping)
 Minimal XP Bar - Gives Level, Current/Max (%) % Rested %
 Stats - FPS & Latency (From SUI)
 Custom Unitframes & cast bar look for Player and Target. (Modified vUF by Vranx)
