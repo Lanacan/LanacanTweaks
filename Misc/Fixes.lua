@@ -95,7 +95,12 @@ local function eventHandler(self, event, ...)
             screenshotQuality = 10,
             scriptErrors = 1,
             trackQuestSorting = 'top',
-            instantQuestText = 1
+            instantQuestText = 1,
+			countdownForCooldowns = 1,
+			timeMgrUseMilitaryTime = 1,
+			timeMgrUseLocalTime = 1,
+			showTargetOfTarget = 1,
+			showTargetCastbar = 1,
         }
         for k, v in pairs(cvars) do SetCVar(k, v) end
 

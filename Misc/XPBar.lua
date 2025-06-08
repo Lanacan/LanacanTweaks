@@ -4,7 +4,9 @@ local classColor = RAID_CLASS_COLORS[playerClass]
 
 -- === Create a small top XP bar ===
 local bar = CreateFrame("StatusBar", "XPTopStatusBar", UIParent)
-bar:SetSize(GetScreenWidth(), 4)
+bar:SetHeight(4)
+bar:SetPoint("LEFT", UIParent, "LEFT", 0, 0)
+bar:SetPoint("RIGHT", UIParent, "RIGHT", 0, 0)
 bar:SetPoint("TOP", UIParent, "TOP", 0, 0)
 bar:SetStatusBarTexture("Interface\\TARGETINGFRAME\\UI-StatusBar")
 bar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
@@ -109,7 +111,7 @@ local function UpdateDisplay()
     bar:SetMinMaxValues(0, maxXP)
     bar:SetValue(currentXP)
 
-    local barWidth = bar:GetWidth()
+    local barWidth = bar:GetRight() - bar:GetLeft()
     local percent = currentXP / maxXP
     spark:ClearAllPoints()
     spark:SetPoint("CENTER", bar, "LEFT", barWidth * percent, 0)

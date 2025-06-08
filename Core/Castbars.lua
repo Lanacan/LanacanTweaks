@@ -5,8 +5,12 @@ local CONFIG = {
     player = {
         x = 0,
         y = -220,
-        scale = .89,
-    },    
+        scale = 0.89,
+    },
+    target = {
+        x = 0,
+        y = 180,
+    },
     texture = "Interface\\TargetingFrame\\UI-StatusBar", -- or set to "Default"
 }
 
@@ -15,6 +19,7 @@ local format = string.format
 local max = math.max
 local FONT = STANDARD_TEXT_FONT
 
+-- === Timer Setup ===
 local function ApplyCastBarTimer(castBar, fontSize)
     castBar.timer = castBar:CreateFontString(nil, "OVERLAY")
     castBar.timer:SetFont(FONT, fontSize, "THINOUTLINE")
@@ -22,9 +27,11 @@ local function ApplyCastBarTimer(castBar, fontSize)
     castBar.update = 0.1
 end
 
+-- === Timer OnUpdate ===
 local function Castbar_OnUpdate(self, elapsed)
     if not self.timer then return end
-    if self.update and self.update < elapsed then
+    self.update = self.update - elapsed
+    if self.update <= 0 then
         if self.casting then
             self.timer:SetText(format("%.1f", max(self.maxValue - self.value, 0)))
         elseif self.channeling then
@@ -33,17 +40,47 @@ local function Castbar_OnUpdate(self, elapsed)
             self.timer:SetText("")
         end
         self.update = 0.1
-    else
-        self.update = self.update - elapsed
     end
 end
 
-local function AnchorTargetCastBar()
-    local tcb = TargetFrameSpellBar
-    tcb:ClearAllPoints()
-    tcb:SetPoint("CENTER", UIParent, "BOTTOM", CONFIG.target.x, CONFIG.target.y)
+-- === Lag Indicator Hook ===
+local function HookLagIndicator(castBar)
+    castBar:HookScript("OnUpdate", function(self)
+        if self.lag == nil then
+            self.lag = _G[self:GetName().."Lag"] or self:CreateTexture(self:GetName().."Lag", "BORDER")
+            self.lag:SetTexture("Interface\\RAIDFRAME\\Raid-Bar-Hp-Fill", "BACKGROUND")
+            self.lag:SetVertexColor(1, 0, 0)
+            self.lag:SetBlendMode("ADD")
+        end
+
+        if self.lag and self:IsShown() and self.casting then
+            local down, up, lag = GetNetStats()
+            local minVal, maxVal = self:GetMinMaxValues()
+            local lagRatio = (lag / 1000) / (maxVal - minVal)
+            if lagRatio < 0 then lagRatio = 0 elseif lagRatio > 1 then lagRatio = 1 end
+
+            local barWidth = self:GetWidth()
+            local lagWidth = barWidth * lagRatio
+
+            -- 🔴 Minimum width for visibility
+            if lag > 0 and lagWidth < 2 then
+                lagWidth = 2
+            end
+
+            self.lag:ClearAllPoints()
+            self.lag:SetPoint("TOPRIGHT", self, "TOPRIGHT", 0, 0)
+            self.lag:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
+            self.lag:SetWidth(lagWidth)
+            self.lag:SetHeight(self:GetHeight())
+            self.lag:Show()
+        elseif self.lag then
+            self.lag:Hide()
+        end
+    end)
 end
 
+
+-- === CastBar Styling ===
 local function StyleCastBars()
     if InCombatLockdown() then return end
 
@@ -84,28 +121,20 @@ local function StyleCastBars()
 
     ApplyCastBarTimer(cb, 14)
     cb:HookScript("OnUpdate", Castbar_OnUpdate)
+    HookLagIndicator(cb)
 
     -- === Target CastBar (Minimalist: Icon + Timer Only) ===
     local tcb = TargetFrameSpellBar
-	tcb.Border:SetDrawLayer("OVERLAY", 1)
-	
-	--tcb.ignoreFramePositionManager = true
-    --tcb:ClearAllPoints()
-    --tcb:SetPoint("BOTTOM", TargetFrame, "TOP", 0, 10)
-		
-    -- Set icon
+    tcb.Border:SetDrawLayer("OVERLAY", 1)
     tcb.Icon:SetSize(15, 15)
     tcb.Icon:SetPoint("RIGHT", tcb, "LEFT", -5, 0)
 
-    -- Optional: use the same texture as player
     if CONFIG.texture ~= "Default" then
         tcb:SetStatusBarTexture(CONFIG.texture)
     end
 
-    -- Timer only
     ApplyCastBarTimer(tcb, 11)
     tcb:HookScript("OnUpdate", Castbar_OnUpdate)
-    
 end
 
 -- === EVENT REGISTRATION ===
