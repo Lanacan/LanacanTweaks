@@ -50,6 +50,19 @@ end
 -- CLASS/REACTION COLORS
 -- Applies class colors to player units and reaction colors to NPC targets' health bars
 if vuf.colors or vuf.reactionColor then
+    -- Custom reaction color table
+    local REACTION_COLORS = {
+        [1] = {r = 0.9,  g = 0,    b = 0},    -- Hostile (Red)
+        [2] = {r = 0.9,  g = 0,    b = 0},    -- Hostile (Red)
+        [3] = {r = 0.75, g = 0.27, b = 0},    -- Unfriendly (Orange-ish)
+        [4] = {r = 0.8,  g = 0.7,  b = 0.2},  -- Neutral (Yellow)
+        [5] = {r = 0,    g = 0.7,  b = 0},    -- Friendly (Green)
+        [6] = {r = 0,    g = 0.7,  b = 0},    -- Friendly (Green)
+        [7] = {r = 0,    g = 0.7,  b = 0},    -- Friendly (Green)
+        [8] = {r = 0,    g = 0.7,  b = 0},    -- Friendly (Green)
+        [9] = {r = 0.5,  g = 0.5,  b = 0.5},  -- Tapped or denied (Grey)
+    }
+
     local function colour(statusbar, unit)
         if not UnitExists(unit) then return end
 
@@ -64,11 +77,10 @@ if vuf.colors or vuf.reactionColor then
         -- Otherwise, use reaction color for non-player units if enabled
         elseif vuf.reactionColor then
             local reaction = UnitReaction(unit, "player")
-            if reaction then
-                local c = FACTION_BAR_COLORS[reaction]
-                if c then
-                    statusbar:SetStatusBarColor(c.r, c.g, c.b)
-                end
+            if reaction and REACTION_COLORS[reaction] then
+				if UnitIsTapDenied(unit) then reaction = 9 end
+                local c = REACTION_COLORS[reaction]
+                statusbar:SetStatusBarColor(c.r, c.g, c.b)
             end
         end
     end
@@ -79,6 +91,7 @@ if vuf.colors or vuf.reactionColor then
         colour(self, self.unit)
     end)
 end
+
 
 -- STOP REST FLASH
 -- Disables the glowing/resting animation/icons on the player frame when resting if vuf.rest is true
@@ -143,32 +156,32 @@ if vuf.rcolor then
 end
 
 -- DARK FRAMES
--- Applies a darker tint to various UI frame textures to create a darker, less bright appearance
 if vuf.dark then
-    for _, v in next, {
+    local function ApplyDarkColor(texture)
+        if texture and texture.SetVertexColor and vuf.frameRgb then
+            texture:SetVertexColor(unpack(vuf.frameRgb))
+        end
+    end
+
+    local texturesToDarken = {
         PlayerFrameTexture,
         TargetFrameTextureFrameTexture,
-        TargetFrameToTTextureFrameTexture,
+		TargetFrameToTTextureFrameTexture,
         FocusFrameTextureFrameTexture,
         FocusFrameToTTextureFrameTexture,
         PetFrameTexture,
-        PartyMemberFrame1Texture, 
-        PartyMemberFrame2Texture, 
-        PartyMemberFrame3Texture, 
+        PartyMemberFrame1Texture,
+        PartyMemberFrame2Texture,
+        PartyMemberFrame3Texture,
         PartyMemberFrame4Texture,
-		LortiUIPlayerFrame,
---	PartyMemberFrame1PetFrameTexture, 
---	PartyMemberFrame2PetFrameTexture, 
---	PartyMemberFrame3PetFrameTexture, 
---	PartyMemberFrame4PetFrameTexture, 
---	FocusFrameSpellBarBorder, 
---	TargetFrameSpellBarBorder, 
-	    CastingBarFrameBorder,
+        CastingBarFrameBorder,
     }
-    do
-        v:SetVertexColor(unpack(vuf.frameRgb))  -- Apply the configured dark RGBA color to each texture
-    end
+
+    for _, tex in pairs(texturesToDarken) do
+        ApplyDarkColor(tex)
+    end   
 end
+
 
 -- THICK FRAMES
 -- Applies thicker health bars and custom borders for elite, rare elite, and rare mobs on the target frame
@@ -282,9 +295,4 @@ if vuf.thickness then
     if TargetFrameTextureFrameDeadText then
         TargetFrameTextureFrameDeadText:SetPoint("CENTER", TargetFrameTextureFrame, "CENTER", -50, 12);
     end
-
-    -- Change target-of-target frame texture and height for a customized appearance
-    TargetFrameToTTextureFrameTexture:SetTexture(
-        "Interface\\Addons\\LanacanTweaks\\textures\\unitframes\\UI-TargetofTargetFrame");
-    TargetFrameToTHealthBar:SetHeight(8)
 end
