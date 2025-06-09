@@ -19,7 +19,7 @@ local CONFIG = {
         font = {"Fonts\\FRIZQT__.TTF", 10, "OUTLINE"}         -- font size updated to 12
     },
     zoneText = {
-        subFont = {"Fonts\\FRIZQT__.TTF", 12, "OUTLINE"},
+        subFont = {"Fonts\\FRIZQT__.TTF", 10, "OUTLINE"},
         size = {130, 20}
     },
     coords = {

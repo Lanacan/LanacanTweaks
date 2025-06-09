@@ -47,7 +47,7 @@ else
 	-- Otherwise, configure and set up the vehicle button
 	
 	-- Position the button below the minimap with an offset
-	vehicle:SetPoint("TOP", Minimap, "BOTTOM", 0, -5)
+	vehicle:SetPoint("TOP", Minimap, "BOTTOM", 0, 20)
 	
 	-- Set the button's size (width x height)
 	vehicle:SetSize(100, 20)
