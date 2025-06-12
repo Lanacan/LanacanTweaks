@@ -6,8 +6,8 @@ THIS IS A REWORED vUF WITH LARGER HEATHBARS- https://vranx.com/ui.htm#UnitFrames
 local vuf = {}
 vuf.scale     = 1.00   -- Set the overall scale of player, target, and casting bar frames
 vuf.position  = true   -- Enable custom positioning of frames
-vuf.player    = { "CENTER", UIParent, "CENTER", -230, -135 }  -- Player frame position anchor and offsets
-vuf.target    = { "CENTER", UIParent, "CENTER", 230, -135 }   -- Target frame position anchor and offsets
+vuf.player    = { "CENTER", UIParent, "CENTER", -235, -135 }  -- Player frame position anchor and offsets
+vuf.target    = { "CENTER", UIParent, "CENTER", 235, -135 }   -- Target frame position anchor and offsets
 vuf.colors    = true   -- Enable class colors on health bars for player and player-controlled units
 vuf.reactionColor = true  -- Enable reaction-based colors on non-player target health bars
 vuf.rest      = false   -- Disable rest state flashing and icons on player frame

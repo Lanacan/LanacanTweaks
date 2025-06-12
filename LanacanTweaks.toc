@@ -2,12 +2,13 @@
 ## Title: |cFFFFFFFFLanacan|r|cffa335eeTweaks|r  
 ## Notes: Various small scripts and simple addons packaged together.
 ## Author: Not me, I stole or borrowed all this from others and put it into one place.
-## Version: 1.0.0 - Classic
+## Version: 2.0.0 - Classic
 ## OptionalDeps: 
 
 Common.lua
 
 ## CORE TWEAKS ##
+Core/ActionBars.lua
 Core/Auras.lua
 Core/Buffs.lua
 Core/Castbars.lua
@@ -29,4 +30,5 @@ Misc/Stats.lua
 Misc/TrainerFilterFix.lua
 Misc/UIScale.lua
 Misc/XPBar.lua
+Misc/tullaRange.lua
 

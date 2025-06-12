@@ -1,5 +1,5 @@
 --[[
-THIS IS A REWORED ZAREM TOOTIP by VRANX - https://www.wowinterface.com/downloads/info26383-ZaremTooltip.html
+THIS IS A REWORKED ZAREM TOOTIP by VRANX - https://www.wowinterface.com/downloads/info26383-ZaremTooltip.html
 ]]--
 
 local _G, ipairs, format, strfind = _G, ipairs, format, strfind

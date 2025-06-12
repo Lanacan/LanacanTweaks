@@ -1,6 +1,6 @@
 -- === Chat Window Config ===
 local ChatConfig = {
-    width = 500,
+    width = 450,
     height = 250,
     anchor = "BOTTOMLEFT",
     xOffset = 5,
