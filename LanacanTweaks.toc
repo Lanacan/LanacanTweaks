@@ -3,12 +3,13 @@
 ## Notes: Various small scripts and simple addons packaged together.
 ## Author: Not me, I stole or borrowed all this from others and put it into one place.
 ## Version: 2.0.0 - Classic
-## OptionalDeps: 
+## OptionalDeps: LibActionButton-1.0
 
 Common.lua
 
 ## CORE TWEAKS ##
 Core/ActionBars.lua
+Core/ActionBarStyler.lua
 Core/Auras.lua
 Core/Buffs.lua
 Core/Castbars.lua
