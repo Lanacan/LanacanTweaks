@@ -101,6 +101,7 @@ local function eventHandler(self, event, ...)
 			timeMgrUseLocalTime = 1,
 			showTargetOfTarget = 1,
 			showTargetCastbar = 1,
+			ResampleAlwaysSharpen = 1,
         }
         for k, v in pairs(cvars) do SetCVar(k, v) end
 

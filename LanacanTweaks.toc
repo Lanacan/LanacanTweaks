@@ -23,6 +23,7 @@ Core/NamePlates.lua
 Core/RaidFrameReSizer.lua
 
 ## QOL TWEAKS ##
+Misc/AutoBags.lua
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
 Misc/Fixes.lua

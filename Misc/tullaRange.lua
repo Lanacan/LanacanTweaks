@@ -292,8 +292,8 @@ end
 function Addon:GetDatabaseDefaults()
 	return {
 		normal = {1, 1, 1},
-		oor = {1, 0.3, 0.1},
-		oom = {0.1, 0.3, 1},
+		oor = { 0.8, 0.1, 0.1 },
+		oom = {0.5, 0.5, 1.0},
 		unusable = {0.4, 0.4, 0.4}
 	}
 end
