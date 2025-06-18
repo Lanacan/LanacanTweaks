@@ -23,21 +23,7 @@ f:SetScript("OnEvent", function()
     bu.bg.backdropInfo = backdrop
     bu.bg:ApplyBackdrop()
     bu.bg:SetBackdropColor(0, 0, 0, 1)
-    bu.bg:SetBackdropBorderColor(0, 0, 0, 0)
-
-    local nt = bu:GetNormalTexture()
-    if not isLeaveButton then
-      if nt then nt:SetAlpha(0) end
-      hooksecurefunc(bu, "SetNormalTexture", function(self)
-        if self:GetNormalTexture() then self:GetNormalTexture():SetAlpha(0) end
-      end)
-    else
-      if nt then
-        nt:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-        nt:SetPoint("TOPLEFT", bu, "TOPLEFT", 1, -1)
-        nt:SetPoint("BOTTOMRIGHT", bu, "BOTTOMRIGHT", -1, 1)
-      end
-    end
+    bu.bg:SetBackdropBorderColor(0, 0, 0, 0)  -- start with transparent border
   end
 
   local function stripAllTextures(bu)
@@ -45,8 +31,8 @@ f:SetScript("OnEvent", function()
       local region = select(i, bu:GetRegions())
       if region and region:IsObjectType("Texture") then
         local name = region:GetName()
-        if name and (name:find("Icon") or name:find("Cooldown")) then
-          -- keep icon and cooldown
+        if name and (name:find("Icon") or name:find("Cooldown") or name:find("Checked")) then
+          -- keep important visuals
         else
           region:SetTexture(nil)
           region:Hide()
@@ -66,7 +52,7 @@ f:SetScript("OnEvent", function()
     local nameText = _G[name .. "Name"]
     local flash = _G[name .. "Flash"]
     local normal = _G[name .. "NormalTexture"]
-    local highlight = _G[name .. "Highlight"]
+    local highlight = _G[name .. "Highlight"]	
     local checked = _G[name .. "Checked"]
     local pushed = _G[name .. "Pushed"]
     local shadow = _G[name .. "Shadow"]
@@ -76,7 +62,13 @@ f:SetScript("OnEvent", function()
 
     if border then border:SetTexture(nil) end
     if highlight then highlight:SetTexture(nil) end
-    if checked then checked:SetTexture(nil); checked:Hide() end
+
+    -- Remove old checked texture if present
+    if checked then
+      checked:SetTexture(nil)
+      checked:Hide()
+    end
+
     if pushed then pushed:SetTexture(nil); pushed:Hide() end
     if shadow then shadow:SetTexture(nil); shadow:Hide() end
     if flash then flash:SetTexture(nil); flash:Hide() end
@@ -111,8 +103,38 @@ f:SetScript("OnEvent", function()
       end
     end
 
+    -- Apply background frame
     applyBackground(bu)
+
+    -- Hook SetChecked to toggle border color of background
+    hooksecurefunc(bu, "SetChecked", function(self, checked)
+      if self.bg then
+        if checked then
+          self.bg:SetBackdropBorderColor(1, 0.82, 0, 0.5)  -- gold border color
+        else
+          self.bg:SetBackdropBorderColor(0, 0, 0, 0)      -- transparent border
+        end
+      end
+    end)
+
+    -- Set initial border color based on current checked state
+    if bu.bg and bu:GetChecked() then
+      bu.bg:SetBackdropBorderColor(1, 0.82, 0, 1)
+    end
+
     bu.styled = true
+  end
+
+  -- Style Bag Buttons (Main Backpack + Bag1..4)
+  local bagButtons = {
+    MainMenuBarBackpackButton,
+    CharacterBag0Slot,
+    CharacterBag1Slot,
+    CharacterBag2Slot,
+    CharacterBag3Slot,
+  }
+  for _, bu in ipairs(bagButtons) do
+    styleButton(bu)
   end
 
   -- Bartender4 buttons
@@ -143,7 +165,7 @@ f:SetScript("OnEvent", function()
   C_Timer.After(0.5, function()
     local blizzBars = {
       "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
-      "MultiBarLeftButton", "MultiBarRightButton", "StanceButton"
+      "MultiBarLeftButton", "MultiBarRightButton", "StanceButton", "PetActionButton"
     }
 
     for _, prefix in ipairs(blizzBars) do

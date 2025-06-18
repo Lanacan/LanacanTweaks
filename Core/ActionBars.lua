@@ -20,23 +20,23 @@ local function init()
     -- UI CLEANUP
     ----------------------
     local hiddenElements = {
-        CharacterMicroButton, SpellbookMicroButton, TalentMicroButton, QuestLogMicroButton,
-        SocialsMicroButton, LFGMicroButton, MainMenuMicroButton, HelpMicroButton, WorldMapMicroButton,
         MainMenuBarVehicleLeaveButton,
-        MainMenuBarBackpackButton, CharacterBag0Slot, CharacterBag1Slot, CharacterBag2Slot,
-        CharacterBag3Slot, KeyRingButton,
         MainMenuBarTexture0, MainMenuBarTexture1, MainMenuBarTexture2, MainMenuBarTexture3,
-        MainMenuBarLeftEndCap, MainMenuBarRightEndCap, ActionBarUpButton, ActionBarDownButton,
-        ReputationWatchBar, MainMenuExpBar, ArtifactWatchBar, HonorWatchBar,
-        MainMenuBarPageNumber, SlidingActionBarTexture0, SlidingActionBarTexture1,
-        MainMenuBarTextureExtender, MainMenuBarMaxLevelBar, MainMenuBarPerformanceBarFrame,
+        MainMenuBarLeftEndCap, MainMenuBarRightEndCap,
+        ActionBarUpButton, ActionBarDownButton,
+        ReputationWatchBar, MainMenuExpBar,
+        ArtifactWatchBar, HonorWatchBar,
+        MainMenuBarPageNumber,
+        SlidingActionBarTexture0, SlidingActionBarTexture1,
+        MainMenuBarTextureExtender,
+        MainMenuBarMaxLevelBar,
     }
 
     for _, hiddenElement in pairs(hiddenElements) do
         if hiddenElement then hiddenElement:Hide() end
     end
-
-    if MainMenuBarVehicleLeaveButton then
+	
+	if MainMenuBarVehicleLeaveButton then
         MainMenuBarVehicleLeaveButton:SetAlpha(0)
         MainMenuBarVehicleLeaveButton:SetMovable(true)
         MainMenuBarVehicleLeaveButton:ClearAllPoints()
@@ -60,27 +60,24 @@ local function init()
         AlertFrame.SetPoint = function() end
     end
 
-	----------------------
+    ----------------------
     -- SIDEBAR POSITIONING & SCALE FIX
     ----------------------
-	local SIDEBAR_SCALE = 0.80
-	
-	MultiBarRightButton1:ClearAllPoints()
-    MultiBarRightButton1:SetPoint("RIGHT", UIParent, "RIGHT", 0, 100)
-    --MultiBarRight:SetScale(SIDEBAR_SCALE)
+    local SIDEBAR_SCALE = 0.80
+
+    MultiBarRightButton1:ClearAllPoints()
+    MultiBarRightButton1:SetPoint("RIGHT", UIParent, "RIGHT", -5, 175)
 
     MultiBarLeftButton1:ClearAllPoints()
     MultiBarLeftButton1:SetPoint("RIGHT", MultiBarRightButton1, "LEFT", -3, 0)
-    --MultiBarLeft:SetScale(SIDEBAR_SCALE)
-	
-	-- Make sure the scale sticks
+
     local function FixSideBarButtonScale()
         for i = 1, 12 do
             local right = _G["MultiBarRightButton"..i]
             local left = _G["MultiBarLeftButton"..i]
             if right then
                 right:SetIgnoreParentScale(true)
-                right:SetScale(UIParent:GetScale() * SIDEBAR_SCALE)				
+                right:SetScale(UIParent:GetScale() * SIDEBAR_SCALE)
             end
             if left then
                 left:SetIgnoreParentScale(true)
@@ -93,7 +90,6 @@ local function init()
     scaleFixer:RegisterEvent("PLAYER_LOGIN")
     scaleFixer:RegisterEvent("UI_SCALE_CHANGED")
     scaleFixer:RegisterEvent("PLAYER_ENTERING_WORLD")
-
     scaleFixer:SetScript("OnEvent", function(self, event)
         if event == "PLAYER_REGEN_ENABLED" then
             self:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -105,11 +101,117 @@ local function init()
         end
     end)
 
+   ----------------------
+	-- CORNER MENU SYSTEM (Bags + Micro Buttons with Mouseover)
+	----------------------
+	local MenuButtonFrames = {
+		CharacterMicroButton, SpellbookMicroButton, TalentMicroButton,
+		QuestLogMicroButton, SocialsMicroButton, LFGMicroButton,
+		MainMenuMicroButton, HelpMicroButton, WorldMapMicroButton,
+	}
+
+	local BagButtonFrameList = {
+		MainMenuBarBackpackButton, CharacterBag0Slot,
+		CharacterBag1Slot, CharacterBag2Slot, CharacterBag3Slot,
+		KeyRingButton,
+	}
+
+	local CornerMenuFrame = CreateFrame("Frame", "LanacanTweaks_CornerMenuFrame", UIParent)
+	CornerMenuFrame:SetFrameStrata("MEDIUM") -- Or "HIGH" if necessary
+	CornerMenuFrame:SetFrameLevel(10)        -- Ensure above default UI
+	CornerMenuFrame:SetWidth(300)
+	CornerMenuFrame:SetHeight(150)
+	CornerMenuFrame:SetPoint("BOTTOMRIGHT")
+	CornerMenuFrame:SetScale(1)
+	CornerMenuFrame:SetAlpha(0) -- Start hidden
+
+	CornerMenuFrame:EnableMouse(true)
+	
+	MainMenuMicroButton:SetParent(CornerMenuFrame)
+	MainMenuMicroButton:EnableMouse(true)
+
+	HelpMicroButton:SetParent(CornerMenuFrame)
+	HelpMicroButton:EnableMouse(true)
+
+	WorldMapMicroButton:SetParent(CornerMenuFrame)
+	WorldMapMicroButton:EnableMouse(true)
+
+
+	local function FadeIn(frame)
+		UIFrameFadeIn(frame, 0.25, frame:GetAlpha(), 1)
+	end
+
+	local function FadeOut(frame)
+		UIFrameFadeOut(frame, 0.25, frame:GetAlpha(), 0)
+	end
+
+	CornerMenuFrame:SetScript("OnEnter", function(self)
+		FadeIn(self)
+	end)
+
+	CornerMenuFrame:SetScript("OnLeave", function(self)
+		FadeOut(self)
+	end)
+
+	-- Position bag buttons
+	for i, btn in pairs(BagButtonFrameList) do
+		btn:SetParent(CornerMenuFrame)
+		btn:ClearAllPoints()
+		if i == 1 then			
+			btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -10, 45)
+		else
+			btn:SetPoint("RIGHT", BagButtonFrameList[i-1], "LEFT", -2, 0)
+		end
+	end
+
+	-- Position micro buttons
+	for i, btn in ipairs(MenuButtonFrames) do
+		if btn then
+			btn:SetParent(CornerMenuFrame)
+			btn:ClearAllPoints()
+			--btn:SetScale(UIParent:GetScale())
+			btn:SetAlpha(1)
+			btn:Show()
+			if i == 1 then				
+				btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -(btn:GetWidth() * 7), 5)
+			else
+				btn:SetPoint("LEFT", MenuButtonFrames[i-1], "RIGHT", 0, 0)
+			end
+		end
+	end
+
+	-- Keep frame visible while mouse is over any button
+	local function OnChildEnter(self)
+		FadeIn(CornerMenuFrame)
+	end
+
+	local function OnChildLeave(self)
+		-- Small delay to prevent flicker, or immediately fade out
+		FadeOut(CornerMenuFrame)
+	end
+
+	-- Add mouse events to all buttons
+	for _, btn in ipairs(MenuButtonFrames) do
+		if btn then
+			btn:EnableMouse(true)
+			btn:SetScript("OnEnter", OnChildEnter)
+			btn:SetScript("OnLeave", OnChildLeave)
+		end
+	end
+
+	for _, btn in ipairs(BagButtonFrameList) do
+		if btn then
+			btn:EnableMouse(true)
+			btn:SetScript("OnEnter", OnChildEnter)
+			btn:SetScript("OnLeave", OnChildLeave)
+		end
+	end
+
+
     ----------------------
     -- ACTIONBAR LAYOUTS
     ----------------------
     if LayoutStyle == "LancanLayout" then
-        -- Custom personal layout
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("CENTER", MainMenuBar, -105, 315)
         ActionButton7:ClearAllPoints()
@@ -117,21 +219,21 @@ local function init()
         MainMenuBar:SetScale(0.95)
 
         MultiBarBottomLeftButton1:ClearAllPoints()
-        MultiBarBottomLeftButton1:SetPoint("BOTTOM", UIParent, -231, 0)
+        MultiBarBottomLeftButton1:SetPoint("BOTTOM", UIParent, -231, 5)
         MultiBarBottomLeft:SetScale(0.90)
 
         MultiBarBottomRightButton10:ClearAllPoints()
-        MultiBarBottomRightButton10:SetPoint("BOTTOM", UIParent, 315, 0)
+        MultiBarBottomRightButton10:SetPoint("BOTTOM", UIParent, 315, 5)
         MultiBarBottomRightButton7:ClearAllPoints()
         MultiBarBottomRightButton7:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton10, "TOPLEFT", 0, 0)
         MultiBarBottomRightButton4:ClearAllPoints()
         MultiBarBottomRightButton4:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton7, "TOPLEFT", 0, 0)
         MultiBarBottomRightButton1:ClearAllPoints()
         MultiBarBottomRightButton1:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton4, "TOPLEFT", 0, 0)
-		
+
         if PetActionButton1 then
             PetActionButton1:ClearAllPoints()
-            PetActionButton1:SetPoint("BOTTOM", MultiBarBottomLeftButton2, "TOP", 10)
+            PetActionButton1:SetPoint("BOTTOM", MultiBarBottomLeftButton2, "TOP", 10, 5)
             PetActionBarFrame:SetFrameStrata("HIGH")
             PetActionBarFrame:SetScale(.90)
         end
@@ -139,7 +241,7 @@ local function init()
         if StanceButton1 then
             StanceButton1:ClearAllPoints()
             StanceButton1:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton12, "BOTTOMRIGHT", 20, 1)
-			StanceBarFrame:SetAlpha(0.25)
+            StanceBarFrame:SetAlpha(0.25)
         end
 
         if PossessButton1 then
@@ -148,7 +250,6 @@ local function init()
         end
 
     elseif LayoutStyle == "StackedLayout" then
-        -- 12 x 3 stacked layout
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 263, -30)
 
@@ -159,7 +260,7 @@ local function init()
         MultiBarBottomRight:SetPoint("BOTTOMLEFT", MultiBarBottomLeftButton1, "TOPLEFT", 0)
 
         if PetActionButton1 then
-            PetActionButton1:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton2, "TOP", 12)
+            PetActionButton1:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton2, "TOP", 12, 5)
             PetActionBarFrame:SetScale(.90)
         end
 
@@ -170,7 +271,6 @@ local function init()
         end
 
     else
-        -- Default layout (6x2 right bar)
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 136.5, 10)
         MultiBarBottomLeft:ClearAllPoints()
@@ -179,7 +279,7 @@ local function init()
         MultiBarBottomRightButton7:SetPoint("LEFT", ActionButton12, "RIGHT", 10, 0)
 
         if PetActionButton1 then
-            PetActionButton1:SetPoint("BOTTOMLEFT", MultiBarBottomLeftButton2, "TOPRIGHT", 0)
+            PetActionButton1:SetPoint("BOTTOMLEFT", MultiBarBottomLeftButton2, "TOPRIGHT", 0, 5)
             PetActionBarFrame:SetScale(.90)
         end
 
@@ -189,27 +289,11 @@ local function init()
         end
     end
 
-    
-
     ----------------------
     -- HIDE DECORATIVE TEXTURES
     ----------------------
     if SlidingActionBarTexture0 then SlidingActionBarTexture0:Hide() end
     if SlidingActionBarTexture1 then SlidingActionBarTexture1:Hide() end
-
-    ----------------------
-    -- BLOCK ERRORS
-    ----------------------
-    if not AchievementMicroButton_Update then
-        AchievementMicroButton_Update = function() end
-    end
-
-    if StoreMicroButton then
-        StoreMicroButton:SetPoint("TOPLEFT", -250, -50000)
-    end
-    if TalentMicroButton then
-        TalentMicroButton:SetPoint("TOPLEFT", -250, -50000)
-    end
 
     ----------------------
     -- HOTKEY FONT TWEAK
