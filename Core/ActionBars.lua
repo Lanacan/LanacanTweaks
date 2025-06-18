@@ -1,6 +1,7 @@
--- Modified Action Bar layout. 
+-- Lanacan Tweaks - Modified Action Bar Layout for WoW Classic
 
 local function init()
+    -- Do not run if other major action bar addons are loaded
     if IsAddOnLoaded("Bartender4") then
         print("|cFFFFFFFFLanacan|r|cffa335eeTweaks|r: Bartender4 is loaded. Custom Actionbar layout code will not run.")
         return
@@ -9,28 +10,30 @@ local function init()
         return
     end
 
+    ----------------------
+    -- CONFIGURATION
+    ----------------------
     local LayoutStyle = "LancanLayout" -- Options: "LancanLayout", "StackedLayout", "Default"
-    local HideStance = false
+    local HideStance = false -- Hide the stance bar
 
-    -- Hide stuff
+    ----------------------
+    -- UI CLEANUP
+    ----------------------
     local hiddenElements = {
         CharacterMicroButton, SpellbookMicroButton, TalentMicroButton, QuestLogMicroButton,
         SocialsMicroButton, LFGMicroButton, MainMenuMicroButton, HelpMicroButton, WorldMapMicroButton,
-        MainMenuBarVehicleLeaveButton, MainMenuBarBackpackButton,
-        CharacterBag0Slot, CharacterBag1Slot, CharacterBag2Slot, CharacterBag3Slot,
-        KeyRingButton,
+        MainMenuBarVehicleLeaveButton,
+        MainMenuBarBackpackButton, CharacterBag0Slot, CharacterBag1Slot, CharacterBag2Slot,
+        CharacterBag3Slot, KeyRingButton,
         MainMenuBarTexture0, MainMenuBarTexture1, MainMenuBarTexture2, MainMenuBarTexture3,
-        MainMenuBarLeftEndCap, MainMenuBarRightEndCap,
-        ActionBarUpButton, ActionBarDownButton, ReputationWatchBar, MainMenuExpBar,
-        ArtifactWatchBar, HonorWatchBar, MainMenuBarPageNumber,
-        SlidingActionBarTexture0, SlidingActionBarTexture1, MainMenuBarTextureExtender,
-        MainMenuBarMaxLevelBar, MainMenuBarPerformanceBarFrame
+        MainMenuBarLeftEndCap, MainMenuBarRightEndCap, ActionBarUpButton, ActionBarDownButton,
+        ReputationWatchBar, MainMenuExpBar, ArtifactWatchBar, HonorWatchBar,
+        MainMenuBarPageNumber, SlidingActionBarTexture0, SlidingActionBarTexture1,
+        MainMenuBarTextureExtender, MainMenuBarMaxLevelBar, MainMenuBarPerformanceBarFrame,
     }
 
     for _, hiddenElement in pairs(hiddenElements) do
-        if hiddenElement then
-            hiddenElement:Hide()
-        end
+        if hiddenElement then hiddenElement:Hide() end
     end
 
     if MainMenuBarVehicleLeaveButton then
@@ -48,14 +51,65 @@ local function init()
         RegisterStateDriver(StanceBarFrame, "visibility", "hide")
     end
 
+    ----------------------
+    -- ALERT FRAME POSITION
+    ----------------------
     if AlertFrame then
         AlertFrame:ClearAllPoints()
         AlertFrame:SetPoint("TOP", UIParent, "TOP", 0, 0)
         AlertFrame.SetPoint = function() end
     end
 
-    -- Apply layout
+	----------------------
+    -- SIDEBAR POSITIONING & SCALE FIX
+    ----------------------
+	local SIDEBAR_SCALE = 0.80
+	
+	MultiBarRightButton1:ClearAllPoints()
+    MultiBarRightButton1:SetPoint("RIGHT", UIParent, "RIGHT", 0, 100)
+    --MultiBarRight:SetScale(SIDEBAR_SCALE)
+
+    MultiBarLeftButton1:ClearAllPoints()
+    MultiBarLeftButton1:SetPoint("RIGHT", MultiBarRightButton1, "LEFT", -3, 0)
+    --MultiBarLeft:SetScale(SIDEBAR_SCALE)
+	
+	-- Make sure the scale sticks
+    local function FixSideBarButtonScale()
+        for i = 1, 12 do
+            local right = _G["MultiBarRightButton"..i]
+            local left = _G["MultiBarLeftButton"..i]
+            if right then
+                right:SetIgnoreParentScale(true)
+                right:SetScale(UIParent:GetScale() * SIDEBAR_SCALE)				
+            end
+            if left then
+                left:SetIgnoreParentScale(true)
+                left:SetScale(UIParent:GetScale() * SIDEBAR_SCALE)
+            end
+        end
+    end
+
+    local scaleFixer = CreateFrame("Frame")
+    scaleFixer:RegisterEvent("PLAYER_LOGIN")
+    scaleFixer:RegisterEvent("UI_SCALE_CHANGED")
+    scaleFixer:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+    scaleFixer:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+            FixSideBarButtonScale()
+        elseif InCombatLockdown() then
+            self:RegisterEvent("PLAYER_REGEN_ENABLED")
+        else
+            FixSideBarButtonScale()
+        end
+    end)
+
+    ----------------------
+    -- ACTIONBAR LAYOUTS
+    ----------------------
     if LayoutStyle == "LancanLayout" then
+        -- Custom personal layout
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("CENTER", MainMenuBar, -105, 315)
         ActionButton7:ClearAllPoints()
@@ -74,7 +128,7 @@ local function init()
         MultiBarBottomRightButton4:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton7, "TOPLEFT", 0, 0)
         MultiBarBottomRightButton1:ClearAllPoints()
         MultiBarBottomRightButton1:SetPoint("BOTTOMLEFT", MultiBarBottomRightButton4, "TOPLEFT", 0, 0)
-
+		
         if PetActionButton1 then
             PetActionButton1:ClearAllPoints()
             PetActionButton1:SetPoint("BOTTOM", MultiBarBottomLeftButton2, "TOP", 10)
@@ -94,10 +148,13 @@ local function init()
         end
 
     elseif LayoutStyle == "StackedLayout" then
+        -- 12 x 3 stacked layout
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 263, -30)
+
         MultiBarBottomLeft:ClearAllPoints()
         MultiBarBottomLeft:SetPoint("BOTTOMLEFT", ActionButton1, "TOPLEFT", 0, -10)
+
         MultiBarBottomRight:ClearAllPoints()
         MultiBarBottomRight:SetPoint("BOTTOMLEFT", MultiBarBottomLeftButton1, "TOPLEFT", 0)
 
@@ -109,10 +166,11 @@ local function init()
         if StanceButton1 then
             StanceButton1:ClearAllPoints()
             StanceButton1:SetPoint("TOPLEFT", ActionButton12, "TOPRIGHT", 50, 0)
-            StanceButton1:SetAlpha(.25)
+            StanceBarFrame:SetAlpha(0.25)
         end
 
     else
+        -- Default layout (6x2 right bar)
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 136.5, 10)
         MultiBarBottomLeft:ClearAllPoints()
@@ -131,68 +189,44 @@ local function init()
         end
     end
 
-    -- Right bars
-    MultiBarRight:ClearAllPoints()
-    MultiBarRightButton1:SetPoint("RIGHT", UIParent, "RIGHT", 0, 150)
-    MultiBarRight:SetScale(.80)
+    
 
-    MultiBarLeftButton1:ClearAllPoints()
-    MultiBarLeftButton1:SetPoint("RIGHT", MultiBarRightButton1, "LEFT", -3, 0)
-    MultiBarLeft:SetScale(.80)
-
+    ----------------------
+    -- HIDE DECORATIVE TEXTURES
+    ----------------------
     if SlidingActionBarTexture0 then SlidingActionBarTexture0:Hide() end
     if SlidingActionBarTexture1 then SlidingActionBarTexture1:Hide() end
 
+    ----------------------
+    -- BLOCK ERRORS
+    ----------------------
     if not AchievementMicroButton_Update then
         AchievementMicroButton_Update = function() end
     end
 
-    if StoreMicroButton then StoreMicroButton:SetPoint("TOPLEFT", -250, -50000) end
-    if TalentMicroButton then TalentMicroButton:SetPoint("TOPLEFT", -250, -50000) end
-
-    -- Scale Fix
-    local function FixSideBarButtonScale()
-        local bars = { "MultiBarLeftButton", "MultiBarRightButton" }
-        for _, bar in ipairs(bars) do
-            for i = 1, 12 do
-                local btn = _G[bar..i]
-                if btn then
-                    btn:SetIgnoreParentScale(true)
-                    btn:SetScale(UIParent:GetScale() * 0.80)
-                end
-            end
-        end
+    if StoreMicroButton then
+        StoreMicroButton:SetPoint("TOPLEFT", -250, -50000)
+    end
+    if TalentMicroButton then
+        TalentMicroButton:SetPoint("TOPLEFT", -250, -50000)
     end
 
-    local scaleFixer = CreateFrame("Frame")
-    scaleFixer:RegisterEvent("UI_SCALE_CHANGED")
-    scaleFixer:RegisterEvent("PLAYER_ENTERING_WORLD")
-    scaleFixer:RegisterEvent("PLAYER_LOGIN")
-    scaleFixer:SetScript("OnEvent", function(self, event)
-        if InCombatLockdown() then
-            self:RegisterEvent("PLAYER_REGEN_ENABLED")
-        else
-            FixSideBarButtonScale()
-        end
-    end)
-    scaleFixer:RegisterEvent("PLAYER_REGEN_ENABLED")
-    scaleFixer:SetScript("OnEvent", function(self, event)
-        if event == "PLAYER_REGEN_ENABLED" then
-            self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-        end
-        FixSideBarButtonScale()
-    end)
-
-    -- Fonts
+    ----------------------
+    -- HOTKEY FONT TWEAK
+    ----------------------
     local function UpdateAllHotkeyFonts()
         local font = "Fonts\\FRIZQT__.TTF"
-        local fontSize, fontFlags, fontColor = 12, "OUTLINE", {1, 1, 1, 1}
-        local prefixes = {
-            "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
-            "MultiBarLeftButton", "MultiBarRightButton"
-        }
-        for _, prefix in ipairs(prefixes) do
-            for i = 1, NUM_ACTIONBAR_BUTTONS do
+        local fontSize = 12
+        local fontFlags = "OUTLINE"
+        local fontColor = {1, 1, 1, 1}
+
+        for i = 1, NUM_ACTIONBAR_BUTTONS do
+            local buttons = {
+                "ActionButton", "MultiBarBottomLeftButton",
+                "MultiBarBottomRightButton", "MultiBarLeftButton",
+                "MultiBarRightButton"
+            }
+            for _, prefix in ipairs(buttons) do
                 local ho = _G[prefix..i.."HotKey"]
                 if ho then
                     ho:SetFont(font, fontSize, fontFlags)
@@ -225,12 +259,14 @@ local function init()
     end
 
     UpdateAllHotkeyFonts()
+
     local fontFrame = CreateFrame("Frame")
     fontFrame:RegisterEvent("UPDATE_BINDINGS")
     fontFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     fontFrame:SetScript("OnEvent", UpdateAllHotkeyFonts)
 end
 
+-- Initialize addon on login
 local a = CreateFrame("Frame")
 a:RegisterEvent("PLAYER_LOGIN")
 a:SetScript("OnEvent", init)
