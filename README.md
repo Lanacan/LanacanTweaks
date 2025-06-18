@@ -5,16 +5,21 @@ My Personal WoW Addon "borrowed" from others.
 
 This addon has the folowing included:
 Basic Square minimap with time and Coords - Think of it as a slimmed down Basic Minimap by funkydude
+
 Target frame Aura & Player Buff skinning to match look of Minimap
 
-**NEW** - Action Bar - Very WIP!
-  - LUA configurable
+Action Bar - Very WIP!
   - Look designed to match with Buffs and Minimap Look
   - Reuses Default Action Bars
   - Three bar layouts:
       - Lanacan Layout (what is shown in the screenshots)
       - Stacked Layout - Centered stack of the three main actions bar in a 3 X 6 configuration
       - Compact Default - A version of the default action bar layout with a 6 x 2 MultiBarBottomRight
+  - Will not load if you are running Bartender4, or Dominos
+    
+Action Bar Styler
+  - Make actinobar buttons match with Buffs and Minimap Look
+  - Works on Bartender4 and Dominos. 
 
 Chat
   - Fixed Position
@@ -38,20 +43,23 @@ Minimal XP Bar - Gives Level, Current/Max (%) % Rested %, & Estimated Number of 
 Stats - FPS & Latency (From SUI)
 
 Custom Unitframes & cast bar look for Player and Target. (Modified vUF by Vranx)
-  Player cast bar is movable via LUA config. 
+
+Player cast bar skinning and movable via LUA config. 
 
 Custom Tool Tip (Modified Zarem ToolTip)
 
 Name Plate Coloring (From Zarem NamePlates)
 
 QOL Items:
- - Easy Delete
+ - AutoBags - It opens all bags at vendor or bank, closes when leaving.
+ - Easy Delete 
  - Faster Looting
  - Sell Junk
  - Auto Rrepair
  - Decline Duals
  - Auto Rez
  - CVAR Settings
- - Vehicle Exit Button (Under Minimap)
- - Trainer filter (from TrainerFilterFix)
- - Tullar Range Embeded for Actionbars.
+ - Vehicle Exit Button (Shows in Minimap).
+ - TrainerFilterFix - Embeded.
+ - Tullar Range Embeded for Actionbars. 
+ - LootLite - Embeded.
