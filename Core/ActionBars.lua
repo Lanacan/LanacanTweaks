@@ -1,7 +1,16 @@
--- Lanacan Tweaks - Modified Action Bar Layout for WoW Classic
+----------------------
+-- LANACAN ACTIONBARS - CUSTOM ACTION BAR LAYOUT FOR WOW CLASSIC
+-- A configurable layout system for default Blizzard action bars, designed to improve usability and aesthetics.
+-- Includes multiple layout presets (LancanLayout, StackedLayout, Modified Default), sidebar scale fixes, 
+-- mouseover corner menus for bags and micro buttons, and hotkey font tweaks. 
+-- Automatically disables if Bartender4 or Dominos is loaded to prevent conflicts.
+----------------------
+
 
 local function init()
-    -- Do not run if other major action bar addons are loaded
+    ----------------------
+	-- Do not run this addon if Bartender4 or Dominos are loaded
+	----------------------
     if IsAddOnLoaded("Bartender4") then
         print("|cFFFFFFFFLanacan|r|cffa335eeTweaks|r: Bartender4 is loaded. Custom Actionbar layout code will not run.")
         return
@@ -15,6 +24,7 @@ local function init()
     ----------------------
     local LayoutStyle = "LancanLayout" -- Options: "LancanLayout", "StackedLayout", "Default"
     local HideStance = false -- Hide the stance bar
+	local SIDEBAR_SCALE = 0.70 -- Sidebar scalling gets borked when playing stealth characters, this is used to fix that. 
 
     ----------------------
     -- UI CLEANUP
@@ -46,10 +56,23 @@ local function init()
         MainMenuBarVehicleLeaveButton:SetMovable(false)
     end
 
+	--Hide Stance
     if HideStance then
         StanceBarFrame:SetAlpha(0)
         RegisterStateDriver(StanceBarFrame, "visibility", "hide")
     end
+	
+	-- Hide XP and Reputation Bars 
+	local function hideXPBar()
+		if MainMenuExpBar then
+			MainMenuExpBar:Hide()
+			MainMenuExpBar:UnregisterAllEvents()
+		end
+		if ReputationWatchBar then
+			ReputationWatchBar:Hide()
+			ReputationWatchBar:UnregisterAllEvents()
+		end
+	end
 
     ----------------------
     -- ALERT FRAME POSITION
@@ -63,8 +86,6 @@ local function init()
     ----------------------
     -- SIDEBAR POSITIONING & SCALE FIX
     ----------------------
-    local SIDEBAR_SCALE = 0.80
-
     MultiBarRightButton1:ClearAllPoints()
     MultiBarRightButton1:SetPoint("RIGHT", UIParent, "RIGHT", -5, 175)
 
@@ -101,8 +122,9 @@ local function init()
         end
     end)
 
-   ----------------------
+	----------------------
 	-- CORNER MENU SYSTEM (Bags + Micro Buttons with Mouseover)
+	-- Thank you Tidy Bars for code.
 	----------------------
 	local MenuButtonFrames = {
 		CharacterMicroButton, SpellbookMicroButton, TalentMicroButton,
@@ -207,11 +229,11 @@ local function init()
 		end
 	end
 
-
     ----------------------
     -- ACTIONBAR LAYOUTS
     ----------------------
     if LayoutStyle == "LancanLayout" then
+		-- My Personal Layout with the 2 x 6 Main action bar between unit frames. 
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("CENTER", MainMenuBar, -105, 315)
         ActionButton7:ClearAllPoints()
@@ -250,6 +272,7 @@ local function init()
         end
 
     elseif LayoutStyle == "StackedLayout" then
+		-- The three main action bars stacked in the lower center of the UI. 
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 263, -30)
 
@@ -271,6 +294,7 @@ local function init()
         end
 
     else
+		-- A modified Default layout with MultiBarBottomRight bar stacked in a 2 X 6 configuration. 
         ActionButton1:ClearAllPoints()
         ActionButton1:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 136.5, 10)
         MultiBarBottomLeft:ClearAllPoints()
@@ -296,7 +320,7 @@ local function init()
     if SlidingActionBarTexture1 then SlidingActionBarTexture1:Hide() end
 
     ----------------------
-    -- HOTKEY FONT TWEAK
+    -- HOTKEY FONT TWEAK	
     ----------------------
     local function UpdateAllHotkeyFonts()
         local font = "Fonts\\FRIZQT__.TTF"
@@ -343,7 +367,8 @@ local function init()
     end
 
     UpdateAllHotkeyFonts()
-
+	hideXPBar()
+	
     local fontFrame = CreateFrame("Frame")
     fontFrame:RegisterEvent("UPDATE_BINDINGS")
     fontFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -354,3 +379,4 @@ end
 local a = CreateFrame("Frame")
 a:RegisterEvent("PLAYER_LOGIN")
 a:SetScript("OnEvent", init)
+

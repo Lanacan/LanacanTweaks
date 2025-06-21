@@ -24,9 +24,11 @@ Core/RaidFrameReSizer.lua
 
 ## QOL TWEAKS ##
 Misc/AutoBags.lua
+Misc/AutoSellRepair.lua
+Misc/Automation.lua
+Misc/CVarTweaks.lua
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
-Misc/Fixes.lua
 Misc/LootLite.lua
 Misc/Stats.lua
 Misc/TrainerFilterFix.lua

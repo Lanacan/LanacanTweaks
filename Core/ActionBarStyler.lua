@@ -1,4 +1,11 @@
--- Action Bar Styler for WoW Classic with Bartender4, Dominos, and Default UI Support
+----------------------
+-- LANACAN ACTION BAR STYLER
+-- A lightweight visual cleanup addon for WoW Classic that enhances the appearance of action buttons.
+-- Supports Bartender4, Dominos, and the default Blizzard UI by stripping unwanted textures,
+-- applying uniform styling, and adding a sleek background with optional border highlights.
+-- Designed for consistency, clarity, and minimalism in UI presentation.
+----------------------
+
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
@@ -13,6 +20,9 @@ f:SetScript("OnEvent", function()
     insets = { left = 0, right = 0, top = 0, bottom = 0 }
   }
 
+  ----------------------
+  -- Apply a custom black background frame to buttons
+  ----------------------
   local function applyBackground(bu, isLeaveButton)
     if not bu or bu.bg then return end
     if bu:GetFrameLevel() < 1 then bu:SetFrameLevel(1) end
@@ -26,6 +36,9 @@ f:SetScript("OnEvent", function()
     bu.bg:SetBackdropBorderColor(0, 0, 0, 0)  -- start with transparent border
   end
 
+  ----------------------
+  -- Strip all non-essential textures from a button
+  ----------------------
   local function stripAllTextures(bu)
     for i = 1, bu:GetNumRegions() do
       local region = select(i, bu:GetRegions())
@@ -41,6 +54,9 @@ f:SetScript("OnEvent", function()
     end
   end
 
+  ----------------------
+  -- Fully style a button: strip visuals, reposition elements, and apply background
+  ----------------------
   local function styleButton(bu)
     if not bu or bu.styled then return end
     local name = bu:GetName() or (bu.GetParent and bu:GetParent() and bu:GetParent():GetName()) or ""
@@ -125,7 +141,9 @@ f:SetScript("OnEvent", function()
     bu.styled = true
   end
 
+  ----------------------
   -- Style Bag Buttons (Main Backpack + Bag1..4)
+  ----------------------
   local bagButtons = {
     MainMenuBarBackpackButton,
     CharacterBag0Slot,
@@ -137,7 +155,9 @@ f:SetScript("OnEvent", function()
     styleButton(bu)
   end
 
-  -- Bartender4 buttons
+  ----------------------
+  -- Style Bartender4 Action Buttons
+  ----------------------
   if IsAddOnLoaded("Bartender4") then
     for i = 1, 10 do
       local bar = _G["BT4Bar" .. i]
@@ -149,7 +169,9 @@ f:SetScript("OnEvent", function()
     end
   end
 
-  -- Dominos buttons
+  ----------------------
+  -- Style Dominos Action Buttons
+  ----------------------
   if IsAddOnLoaded("Dominos") then
     for i = 1, 120 do
       local bu = _G["DominosActionButton" .. i]
@@ -161,7 +183,9 @@ f:SetScript("OnEvent", function()
     end
   end
 
-  -- Default Blizzard bars
+  ----------------------
+  -- Style Default Blizzard Action Buttons (Delayed for loading)
+  ----------------------
   C_Timer.After(0.5, function()
     local blizzBars = {
       "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
@@ -175,4 +199,5 @@ f:SetScript("OnEvent", function()
       end
     end
   end)
+
 end)

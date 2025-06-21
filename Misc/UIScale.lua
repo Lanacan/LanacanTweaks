@@ -8,6 +8,13 @@ f:RegisterEvent("PLAYER_LOGIN")
 local useCalculatedScale = false   -- Set to true to use calculated scale; false to use fixed scale
 local fixedScalePercent = 80       -- Fixed scale percent (if useCalculatedScale is false)
 
+-- === Objective Tracker Scaling ===
+local function scaleObjectiveTracker()
+    if ObjectiveTrackerFrame then
+        ObjectiveTrackerFrame:SetScale(0.95)
+    end
+end
+
 -- Set the OnEvent script handler for the frame
 f:SetScript("OnEvent", function(self, event)
     C_Timer.After(1, function()
@@ -31,6 +38,9 @@ f:SetScript("OnEvent", function(self, event)
         else
             print("Failed to get physical screen size.")
         end
+
+        -- Apply objective tracker scale
+        scaleObjectiveTracker()
     end)
 
     self:UnregisterAllEvents()
