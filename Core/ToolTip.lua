@@ -1,66 +1,73 @@
---[[
-THIS IS A REWORKED ZAREM TOOTIP by VRANX - https://www.wowinterface.com/downloads/info26383-ZaremTooltip.html
-]]--
+----------------------
+-- Zarem Tooltip (Reworked by Vranx)
+-- https://www.wowinterface.com/downloads/info26383-ZaremTooltip.html
+--
+-- This addon enhances and customizes the default World of Warcraft tooltip behavior.
+-- Features include class- and reaction-based styling, item quality borders,
+-- guild and title display, health bar customization, and cursor anchoring.
+-- It provides a slash command interface for enabling mouse anchor mode and for moving
+-- the tooltip via a draggable frame.
+-- All configuration options are managed in the `config` table.
+----------------------
 
 local _G, ipairs, format, strfind = _G, ipairs, format, strfind
 local GameTooltip, GameTooltipStatusBar, ItemRefTooltip = GameTooltip, GameTooltipStatusBar, ItemRefTooltip
 local GameTooltipTextLeft1, GameTooltipTextLeft2 = GameTooltipTextLeft1, GameTooltipTextLeft2
 
--- Configuration table holding visual settings for the tooltip
+-- Configuration table holding all visual and behavioral settings for the tooltip
 local config = {
-    bg = {0.08,0.08,0.1,0.8}, -- Background color RGBA of tooltip
-    border = {0.1,0.1,0.1}, -- Border color RGB of tooltip
-    health = { 0, 1, 0 }, -- Default health bar color (green)
-    
-    classBorder = false, -- Use class color for border
-    classBg = false, -- Use class color for background
-    classNames = true, -- Color player names by class
-    classHealth = true, -- Color health bar by class
+    bg = {0.08,0.08,0.1,0.8},            -- Tooltip background color RGBA
+    border = {0.1,0.1,0.1},               -- Tooltip border color RGB
+    health = { 0, 1, 0 },                 -- Default health bar color (green)
 
-    reactionBorder = false, -- Use reaction color for border
-    reactionBg = false, -- Use reaction color for background
-    reactionGuild = true, -- Color guild names by reaction
-    reactionHealth = true, -- Color health bar by reaction
+    classBorder = false,                  -- Use class color for tooltip border
+    classBg = false,                      -- Use class color for tooltip background
+    classNames = true,                    -- Color player names by class
+    classHealth = true,                   -- Color health bar by class
 
-    itemBorder = true, -- Color item tooltips border by quality
-    itemBg = false, -- Color item tooltips background by quality
+    reactionBorder = false,               -- Use reaction color for tooltip border
+    reactionBg = false,                   -- Use reaction color for tooltip background
+    reactionGuild = true,                 -- Color guild names by reaction
+    reactionHealth = true,                -- Color health bar by reaction
 
-    scale = 1.2, -- Tooltip scale multiplier
+    itemBorder = true,                    -- Color item tooltip border by quality
+    itemBg = false,                       -- Color item tooltip background by quality
+
+    scale = 1.2,                         -- Tooltip scale multiplier
 
     font = STANDARD_TEXT_FONT,
     fontHeaderSize = 14,
     fontSize = 12,
 
-    outlineFontHeader = true, -- Use outlined font for header text
-    outlineFont = false, -- Use outlined font for tooltip text
+    outlineFontHeader = true,             -- Use outlined font for header text
+    outlineFont = false,                  -- Use outlined font for tooltip text
 
-    healthHeight = 6, -- Height of the health bar
+    healthHeight = 6,                     -- Height of the health bar
     healthTexture = "Interface\\TargetingFrame\\UI-StatusBar", -- Texture used for health bar
-    healthInside = true, -- Position health bar inside tooltip frame at top
-    padding = 0, -- Padding around tooltip content
+    healthInside = true,                  -- Position health bar inside tooltip frame at top
+    padding = 0,                         -- Padding around tooltip content
 
     -- Mouse anchor position for tooltips when following cursor
     mouseAnchorPos = { "ANCHOR_CURSOR_RIGHT", 24, 5 }, -- Position, offsetX, offsetY
 
-    instantFade = true, -- Whether tooltip should instantly fade when losing mouse focus
+    instantFade = true,                   -- Instantly fade tooltip when mouse leaves
+    hideInCombat = false,                 -- Hide tooltip during combat
+    hideHealthBar = false,                -- Hide health bar
 
-    hideInCombat = false, -- Hide tooltip when player is in combat
-    hideHealthBar = false, -- Hide health bar
+    playerTitle = false,                  -- Show player titles
+    playerRealm = true,                   -- Show player realm name
+    guildRank = true,                     -- Show guild rank text
+    guildRankIndex = false,               -- Show guild rank index
+    pvpText = false,                     -- Show reaction-colored PVP text
 
-    playerTitle = false, -- Show player titles
-    playerRealm = true, -- Show player's realm name
-    guildRank = true, -- Show guild rank text
-    guildRankIndex = false, -- Show guild rank index
-    pvpText = false, -- Show reaction colored PVP text
-
-    -- Text strings used to mark player statuses
+    -- Text strings marking player statuses
     youText = format(">>%s<<", strupper(YOU)),
     afkText = "|cff909090 <AFK>",
     dndText = "|cff909090 <DND>",
     dcText = "|cff909090 <DC>",
     targetText = "|cffffffff@",
 
-    yourGuild = false, -- Special coloring for your own guild
+    yourGuild = false,                    -- Special color for your own guild
     yourGuildColor = { 1, 0.3, 1 }, 
     guildColor = { 1, 0.3, 1 },
     gRankColor = "|cff909090",
@@ -81,24 +88,24 @@ local config = {
     },
 }
 
--- Table mapping unit reaction levels to RGB colors
+-- Table mapping unit reaction levels to RGB colors for consistent coloring
 local REACTION_COLORS = {
     [1] = {r = 0.75,  g = 0.15,  b = 0.15}, -- Hostile dark red
     [2] = {r = 0.75,  g = 0.15,  b = 0.15}, -- Hostile dark red
-    [3] = {r = 0.75, g = 0.27, b = 0}, -- Neutral orange
-    [4] = {r = 0.9,  g = 0.8,  b = 0.3}, -- Friendly yellow
-    [5] = {r = 0,    g = 0.8,  b = 0}, -- Friendly green
-    [6] = {r = 0,    g = 0.8,  b = 0},
-    [7] = {r = 0,    g = 0.8,  b = 0},
-    [8] = {r = 0,    g = 0.8,  b = 0},
-    [9] = {r = 0.5,  g = 0.5,  b = 0.5}, -- Dead/gray
+    [3] = {r = 0.75,  g = 0.27,  b = 0},    -- Neutral orange
+    [4] = {r = 0.9,   g = 0.8,   b = 0.3},  -- Friendly yellow
+    [5] = {r = 0,     g = 0.8,   b = 0},    -- Friendly green
+    [6] = {r = 0,     g = 0.8,   b = 0},
+    [7] = {r = 0,     g = 0.8,   b = 0},
+    [8] = {r = 0,     g = 0.8,   b = 0},
+    [9] = {r = 0.5,   g = 0.5,   b = 0.5},  -- Dead/gray
 }
 
--- Configure the GameTooltip health bar texture and size
+-- Configure the GameTooltip health bar texture and size per config settings
 GameTooltipStatusBar:SetStatusBarTexture(config.healthTexture)
 GameTooltipStatusBar:SetHeight(config.healthHeight)
 
--- Position health bar inside tooltip frame at top, if enabled
+-- Position health bar inside tooltip frame at top if enabled in config
 if config.healthInside then
     GameTooltipStatusBar:ClearAllPoints()
     GameTooltipStatusBar:SetPoint("LEFT", 5, 0)
@@ -107,8 +114,9 @@ if config.healthInside then
 end
 
 do
-    -- Set up a movable frame to reposition tooltip on screen
+    -- Setup a movable frame for repositioning the tooltip on screen
     if not ZaremTooltipAnchor then
+        -- Saved anchor info (defaults)
         ZaremTooltipAnchor = {
             point = "BOTTOMRIGHT",
             relativePoint = "BOTTOMRIGHT",
@@ -125,12 +133,12 @@ do
     moverFrame:SetClampedToScreen(true)
     moverFrame:Hide()
 
-    -- Start moving the frame when dragging begins
+    -- Start moving on drag
     moverFrame:SetScript("OnDragStart", function(self)
         self:StartMoving()
     end)
 
-    -- Stop moving frame and save new anchor position on drag end
+    -- Stop moving and save anchor on drag end
     moverFrame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         local point, _, relativePoint, xOffset, yOffset = self:GetPoint()
@@ -145,9 +153,9 @@ do
 
     local texture = moverFrame:CreateTexture(nil, "ARTWORK")
     texture:SetAllPoints()
-    texture:SetColorTexture(0, 0.8, 0, 0.6) -- Semi-transparent green box
+    texture:SetColorTexture(0, 0.8, 0, 0.6) -- Semi-transparent green box for mover
 
-    -- Slash commands to toggle mover frame and toggle mouse anchor mode
+    -- Slash commands to toggle mover frame and mouse anchor mode
     SLASH_ZAREMTOOLTIP1 = "/zaremtooltip"
     SLASH_ZAREMTOOLTIP2 = "/ztt"
     SlashCmdList["ZAREMTOOLTIP"] = function(msg)
@@ -167,22 +175,22 @@ do
     end
 end
 
--- Hook GameTooltip default anchor to allow repositioning and mouse anchoring
+-- Hook GameTooltip default anchor to support repositioning and mouse anchoring
 hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self, parent)
     self:ClearAllPoints()
 
     local mouseFocus = GetMouseFoci()
-    -- If mouse anchoring enabled and mouse is on world frame, anchor tooltip to cursor
+    -- If mouse anchoring enabled and mouse is over world frame, anchor tooltip to cursor
     if ZaremTooltipAnchor.mouse and mouseFocus[1] == WorldFrame then 
         self:SetOwner(parent, config.mouseAnchorPos[1], config.mouseAnchorPos[2], config.mouseAnchorPos[3])
     else
-        -- Otherwise anchor tooltip at saved position
+        -- Otherwise anchor tooltip at saved position on screen
         self:SetOwner(parent, "ANCHOR_NONE") 
         self:SetPoint(ZaremTooltipAnchor.point, UIParent, ZaremTooltipAnchor.relativePoint, ZaremTooltipAnchor.xOffset, ZaremTooltipAnchor.yOffset)
     end
 end)
 
--- Instantly hide tooltip if mouse moves off unit and instantFade enabled
+-- Instantly hide tooltip if mouse moves off unit and instantFade enabled in config
 GameTooltip:HookScript("OnUpdate", function(self)
     local mouseFocus = GetMouseFoci()
     if config.instantFade and self:GetUnit() and not (UnitExists("mouseover") or ZaremTooltipAnchor.mouse) and mouseFocus[1] == WorldFrame then
@@ -190,7 +198,7 @@ GameTooltip:HookScript("OnUpdate", function(self)
     end
 end)
 
--- Custom fade out method to instantly hide tooltip
+-- Custom fade out method to instantly hide tooltip if enabled
 function GameTooltip:FadeOut()
     if ZaremTooltipAnchor.mouse or config.instantFade then
         self:Hide()
@@ -222,19 +230,18 @@ do
     end
 end
 
--- Apply backdrop (background and border) to the tooltip frame with config colors
+-- Apply backdrop (background and border) to tooltip frame with configured colors
 function ApplyBackdrop(frame)
     if frame.SetBackdrop then
         frame:SetBackdrop(config.backdrop)
         frame:SetBackdropColor(unpack(config.bg))
         frame:SetBackdropBorderColor(unpack(config.border))
     else
-        -- fallback: do nothing or log a warning
-        -- print("Warning: frame does not support SetBackdrop")
+        -- fallback: frame does not support SetBackdrop (rare)
     end
 end
 
--- Color the tooltip border based on class, reaction, or item quality
+-- Color tooltip border based on class, reaction, or item quality
 function ColorBorder(frame, unit, itemQuality)
     if itemQuality and config.itemBorder then
         local r, g, b = GetItemQualityColor(itemQuality)
@@ -268,7 +275,7 @@ function ColorBorder(frame, unit, itemQuality)
     frame:SetBackdropBorderColor(unpack(config.border))
 end
 
--- Set the health bar color based on unit type, class, or reaction
+-- Set health bar color based on unit's class or reaction or default
 function SetHealthBarColor(unit)
     local r, g, b = unpack(config.health)
     if not unit then
@@ -301,7 +308,7 @@ function SetHealthBarColor(unit)
     GameTooltipStatusBar:SetStatusBarColor(r, g, b)
 end
 
--- Update the health bar's value and visibility based on unit health
+-- Update health bar value and visibility based on unit health and config
 local function UpdateHealthBar(unit)
     if not unit or config.hideHealthBar then
         GameTooltipStatusBar:Hide()
@@ -322,7 +329,7 @@ local function UpdateHealthBar(unit)
     GameTooltipStatusBar:Show()
 end
 
--- Update tooltip text lines to show player name with class or reaction color, and guild info
+-- Update tooltip text: color player name by class or reaction, show guild info if enabled
 local function UpdateTooltipText(unit)
     if not unit then return end
 
@@ -349,7 +356,7 @@ local function UpdateTooltipText(unit)
             end
         end
 
-        -- Add realm name if different and enabled
+        -- Append realm name if different and enabled
         if realm and realm ~= "" and config.playerRealm then
             colorName = colorName .. "-" .. realm
         end
@@ -357,7 +364,7 @@ local function UpdateTooltipText(unit)
         -- Replace the first line (player name) in the tooltip
         GameTooltipTextLeft1:SetText(colorName)
 
-        -- Show guild info if applicable
+        -- Show guild info if configured
         if guildName and config.guildRank then
             local guildLine = guildName
             if config.guildRankIndex and guildRankIndex then
@@ -370,7 +377,7 @@ local function UpdateTooltipText(unit)
     end
 end
 
--- Hook into GameTooltip to update health bar and text when tooltip unit changes
+-- Hook GameTooltip event to update health bar and text on unit tooltip set
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
     local unit = select(2, self:GetUnit())
 
@@ -382,7 +389,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
     ColorBorder(self, unit, nil)
 end)
 
--- Hook into item tooltip to color border by item quality
+-- Hook into item tooltip to color border by item quality and optionally background
 GameTooltip:HookScript("OnTooltipSetItem", function(self)
     local _, link = self:GetItem()
     if link then
@@ -403,7 +410,7 @@ end)
 -- Ensure tooltip is drawn above other frames
 GameTooltip:SetFrameStrata("TOOLTIP")
 
--- Return the module table (optional if you want to organize code in a module)
+-- Optional: Return the module table for organization (empty here)
 local ZaremTooltip = {}
 
 return ZaremTooltip

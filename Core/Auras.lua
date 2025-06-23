@@ -1,97 +1,109 @@
--- Replace with your texture path or use a built-in texture
+----------------------
+-- Lanacan Aura Skins
+-- Custom styling for Blizzard default aura icons on Target and Focus frames
+--
+-- This addon modifies the appearance of buff and debuff icons by:
+-- - Cropping the icon texture to remove default Blizzard borders
+-- - Applying a custom colored border (black for buffs, debuff type colors for debuffs)
+-- - Adding a subtle shadow backdrop behind icons for improved clarity
+--
+-- Hooks Blizzard's TargetFrame aura update function to dynamically maintain styling.
+----------------------
+
+-- Simple white square texture used for borders and shadows
 local SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 
--- Define a simple square border backdrop
--- This is used for creating a shadow/border effect behind aura icons
+-- Backdrop configuration for shadow effect around aura icons
 local backdrop = {
-  bgFile = nil,             -- No background texture
-  edgeFile = SQUARE_TEXTURE, -- Use the white square texture for the border
-  tile = false,             -- Don't tile the edge texture
-  tileSize = 32,            -- Not tiled, but size if needed
-  edgeSize = 1,             -- Border thickness of 1 pixel
-  insets = {                -- Insets for the border padding
-    left = 0,
-    right = 0,
-    top = 0,
-    bottom = 0,
-  },
+  bgFile = nil,                -- No background fill
+  edgeFile = SQUARE_TEXTURE,   -- White square used as border texture
+  tile = false,                -- No tiling
+  tileSize = 32,
+  edgeSize = 1,               -- Border thickness (1 pixel)
+  insets = { left = 0, right = 0, top = 0, bottom = 0 }, -- No inset padding
 }
 
--- Applies a custom visual style to a given buff or debuff button
--- This function modifies the appearance of individual aura icons by:
--- - cropping the icon texture
--- - repositioning the icon
--- - creating a custom colored border (color depends on debuff type)
--- - adding a shadow backdrop frame behind the icon
+---
+-- Apply custom skin to a single aura button (buff or debuff)
+-- @param b The aura button frame to style
+-- This function crops the icon, adds border and shadow, and marks the button styled.
+---
 local function applySkin(b)
-  if not b or b.styled then return end  -- Exit if button is nil or already styled
+  if not b or b.styled then return end  -- Skip if nil or already styled
 
   local name = b:GetName()
-  if not name then return end            -- Exit if button has no name
+  if not name then return end            -- Should not happen, but be safe
 
-  local isDebuff = name:match("Debuff") -- Check if the aura is a debuff by name pattern
-  local icon = _G[name .. "Icon"]       -- Get the icon texture associated with the button
+  -- Determine if the button is a debuff by name pattern
+  local isDebuff = name:match("Debuff")
+  local icon = _G[name .. "Icon"]
   if icon then
-    -- Crop the icon texture to remove default borders (TexCoord zoom)
+    -- Crop icon texture coords to remove default border space
     icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-    -- Reset icon anchoring points for consistent placement inside the button
+
+    -- Reposition icon inside button with 2-pixel inset padding
     icon:ClearAllPoints()
     icon:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -2)
     icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -2, 2)
+
     b.icon = icon
   end
 
-  -- Create or retrieve the border texture for the aura button
+  -- Create or reuse border texture behind the icon
   local border = _G[name .. "Border"] or b:CreateTexture(name .. "Border", "BACKGROUND", nil, -7)
-  border:SetTexture(SQUARE_TEXTURE) -- Use the square texture for the border
+  border:SetTexture(SQUARE_TEXTURE)
   border:SetTexCoord(0, 1, 0, 1)
-  border:SetDrawLayer("BACKGROUND", -7) -- Draw behind other elements
+  border:SetDrawLayer("BACKGROUND", -7)
 
   if isDebuff then
-    -- For debuffs, color the border based on debuff type (Poison, Curse, etc.)
-    -- Get the debuff type from the unit's debuff at this slot index
-    local debuffType = select(5, UnitDebuff("target", tonumber(name:match("%d+"))))
+    -- Get debuff type color or default to black if unknown
+    local debuffIndex = tonumber(name:match("%d+"))
+    local debuffType = select(5, UnitDebuff("target", debuffIndex))
     local color = DebuffTypeColor[debuffType or "none"] or { r = 0, g = 0, b = 0 }
     border:SetVertexColor(color.r, color.g, color.b)
   else
-    -- For buffs, use a black border color
+    -- Buffs get solid black border
     border:SetVertexColor(0, 0, 0)
   end
-  border:SetAllPoints(b) -- Make the border cover the entire button area
+
+  border:SetAllPoints(b)
   b.border = border
 
-  -- Create a shadow frame behind the button to enhance visual separation
+  -- Create shadow frame behind the aura button for subtle depth
   local shadow = CreateFrame("Frame", nil, b, BackdropTemplateMixin and "BackdropTemplate")
   shadow:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
   shadow:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0)
-  shadow:SetFrameLevel(b:GetFrameLevel() - 1) -- Place behind the button
-  shadow:SetBackdrop(backdrop)                 -- Apply the backdrop with border
-  shadow:SetBackdropBorderColor(0, 0, 0, 1)    -- Black border color for shadow
+  shadow:SetFrameLevel(b:GetFrameLevel() - 1) -- Behind button
+  shadow:SetBackdrop(backdrop)
+  shadow:SetBackdropBorderColor(0, 0, 0, 1) -- Solid black shadow
   b.bg = shadow
 
-  b.styled = true -- Mark the button as styled to avoid repeating this process
+  -- Mark this button as styled to prevent reapplying skin
+  b.styled = true
 end
 
--- Updates and applies skins to all Target and Focus aura icons
--- Loops through all buff and debuff icons on TargetFrame and FocusFrame,
--- calling applySkin to ensure each aura button is visually customized
+---
+-- Apply skins to all buffs and debuffs on Target and Focus frames.
+-- Called on aura update to maintain consistent custom styling.
+---
 local function updateAuraSkins()
+  -- TargetFrame buffs and FocusFrame buffs
   for i = 1, MAX_TARGET_BUFFS do
     applySkin(_G["TargetFrameBuff" .. i])
     applySkin(_G["FocusFrameBuff" .. i])
   end
 
+  -- TargetFrame debuffs and FocusFrame debuffs
   for i = 1, MAX_TARGET_DEBUFFS do
     applySkin(_G["TargetFrameDebuff" .. i])
     applySkin(_G["FocusFrameDebuff" .. i])
   end
 end
 
--- On player login, hook into the Blizzard function that updates the TargetFrame auras
--- This ensures that whenever the game updates aura icons on the TargetFrame,
--- our updateAuraSkins function runs to apply custom styling dynamically
+-- Create frame to hook into Blizzard aura update events after login
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
 f:SetScript("OnEvent", function()
+  -- Hook Blizzard's aura update to apply our custom skins dynamically
   hooksecurefunc("TargetFrame_UpdateAuras", updateAuraSkins)
 end)

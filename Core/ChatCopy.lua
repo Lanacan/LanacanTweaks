@@ -1,14 +1,24 @@
--- ChatCopy.lua
+----------------------
+-- Lanacan ChatCopy
+-- Adds a small button to each default chat window that opens a movable, scrollable window
+-- allowing players to copy the entire chat history.
+--
+-- Features:
+-- - Click-to-copy button on all default chat frames, positioned at bottom-right.
+-- - Scrollable multiline edit box for viewing and copying chat text.
+-- - Button alpha fades in on mouseover and remains minimally visible otherwise.
+----------------------
 
--- === CONFIGURATION ===
-local BUTTON_POSITION = { "BOTTOMRIGHT", -4, 4 } -- Position: { anchor point, x offset, y offset }
-local BUTTON_ALPHA_IDLE = 0.15                    -- Button alpha when idle
-local BUTTON_ALPHA_HOVER = 1.0                    -- Button alpha on hover
--- ======================
+-- Configuration for copy button positioning and alpha transparency
+local BUTTON_POSITION = { "BOTTOMRIGHT", -4, 4 }
+local BUTTON_ALPHA_IDLE = 0.15
+local BUTTON_ALPHA_HOVER = 1.0
 
-local frames = {}
+local frames = {}  -- Tracks chat frames with attached copy buttons
 
--- Create the copy frame
+---
+-- Create and style the hidden copy frame containing the scrollable edit box
+---
 local copyFrame = CreateFrame("Frame", "ChatCopyFrame", UIParent, "BackdropTemplate")
 copyFrame:SetSize(600, 400)
 copyFrame:SetPoint("CENTER")
@@ -21,18 +31,20 @@ copyFrame:SetBackdrop({
 copyFrame:SetBackdropColor(0, 0, 0, 1)
 copyFrame:Hide()
 
+-- Enable dragging of the copy frame
 copyFrame:SetMovable(true)
 copyFrame:EnableMouse(true)
 copyFrame:RegisterForDrag("LeftButton")
 copyFrame:SetScript("OnDragStart", copyFrame.StartMoving)
 copyFrame:SetScript("OnDragStop", copyFrame.StopMovingOrSizing)
 
--- ScrollFrame
+---
+-- Scroll frame and edit box inside the copy frame for displaying copied chat text
+---
 local scrollFrame = CreateFrame("ScrollFrame", nil, copyFrame, "UIPanelScrollFrameTemplate")
 scrollFrame:SetPoint("TOPLEFT", 10, -35)
 scrollFrame:SetPoint("BOTTOMRIGHT", -30, 10)
 
--- EditBox
 local editBox = CreateFrame("EditBox", nil, scrollFrame)
 editBox:SetMultiLine(true)
 editBox:SetFontObject(ChatFontNormal)
@@ -41,11 +53,15 @@ editBox:SetAutoFocus(false)
 editBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)
 scrollFrame:SetScrollChild(editBox)
 
--- Close Button
+-- Close button for the copy frame
 local closeButton = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton")
 closeButton:SetPoint("TOPRIGHT", copyFrame, "TOPRIGHT")
 
--- Extract lines from chat
+---
+-- Extract all visible messages from a given chat frame
+-- @param chatFrame The chat frame to extract messages from
+-- @return table Array of message strings
+---
 local function GetLines(chatFrame)
     local lines = {}
     local numMessages = chatFrame:GetNumMessages()
@@ -58,7 +74,10 @@ local function GetLines(chatFrame)
     return lines
 end
 
--- Copy chat contents
+---
+-- Show the copy frame with the full chat text from the specified chat frame
+-- @param chatFrame The chat frame to copy text from
+---
 local function CopyChat(chatFrame)
     copyFrame:Show()
     copyFrame:SetFrameStrata("DIALOG")
@@ -71,12 +90,14 @@ local function CopyChat(chatFrame)
     editBox:HighlightText()
 end
 
--- Add copy button to chat frame
+---
+-- Add the copy button to a given chat frame with mouseover fade effects
+-- @param chatFrame The chat frame to add the button to
+---
 local function AddCopyButtonToChatFrame(chatFrame)
     local name = chatFrame:GetName()
     if not name then return end
 
-    -- Create the copy button
     local button = CreateFrame("Button", nil, chatFrame)
     button:SetSize(20, 20)
     button:SetPoint(unpack(BUTTON_POSITION))
@@ -89,17 +110,13 @@ local function AddCopyButtonToChatFrame(chatFrame)
     button:SetScript("OnClick", function() CopyChat(chatFrame) end)
 
     button:EnableMouse(true)
-    button:SetScript("OnEnter", function()
-        button:SetAlpha(BUTTON_ALPHA_HOVER)
-    end)
-    button:SetScript("OnLeave", function()
-        button:SetAlpha(BUTTON_ALPHA_IDLE)
-    end)
+    button:SetScript("OnEnter", function() button:SetAlpha(BUTTON_ALPHA_HOVER) end)
+    button:SetScript("OnLeave", function() button:SetAlpha(BUTTON_ALPHA_IDLE) end)
 
     table.insert(frames, chatFrame)
 end
 
--- Add button to all chat windows
+-- Add copy button to all default chat windows on load
 for i = 1, NUM_CHAT_WINDOWS do
     local frame = _G["ChatFrame" .. i]
     if frame then

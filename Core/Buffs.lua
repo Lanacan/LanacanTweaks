@@ -1,10 +1,16 @@
+----------------------
+-- Lanacan Buff Styler
+-- WoW Classic Addon to reposition and reskin buffs, debuffs, and weapon enchants.
+-- Applies custom font, border, and layout styling to improve visibility and aesthetics.
+----------------------
+
 -- Font settings
 local font = "Fonts\\FRIZQT__.TTF"
-local fontSize = 10  -- Adjust this value to your preferred size
+local fontSize = 10  -- Font size for count and duration text
 local fontFlags = "OUTLINE"
-local fontColor = {1, 1, 1, 1}  -- White (R,G,B,Alpha)
+local fontColor = {1, 1, 1, 1}  -- White (RGBA)
 
--- Backdrop settings for buff frame borders
+-- Backdrop settings used for a shadow-like border around each buff button
 local backdrop = {
   bgFile = nil,
   edgeFile = "Interface\\Buttons\\WHITE8X8",
@@ -14,7 +20,7 @@ local backdrop = {
   insets = { left = 0, right = 0, top = 0, bottom = 0 },
 }
 
--- Function to apply font settings to text elements
+-- Applies font settings to text elements (e.g., duration and stack count)
 local function setupFont(textElement)
     if textElement then
         textElement:SetFont(font, fontSize, fontFlags)
@@ -22,7 +28,7 @@ local function setupFont(textElement)
     end
 end
 
--- Applies visual styling to a buff/debuff button
+-- Applies custom skinning (size, borders, shadows, font) to a buff/debuff/ench button
 local function applySkin(b)
     if not b or b.styled then return end
 
@@ -32,30 +38,33 @@ local function applySkin(b)
     local tempenchant = name:match("TempEnchant") ~= nil
     local debuff = name:match("Debuff") ~= nil
 
-    b:SetSize(32, 32)
+    b:SetSize(32, 32)  -- Standardized button size
 
+    -- Style the icon texture
     local icon = _G[name .. "Icon"]
     if icon then
         icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
         icon:ClearAllPoints()
-        icon:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -2)     -- Small offset for padding
+        icon:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -2)
         icon:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -2, 2)
     end
     b.icon = icon
 
+    -- Style the border (used for color-coding)
     local border = _G[name .. "Border"] or b:CreateTexture(name .. "Border", "BACKGROUND", nil, -7)
     border:SetTexture("Interface\\Buttons\\WHITE8X8")
     border:SetTexCoord(0, 1, 0, 1)
     border:SetDrawLayer("BACKGROUND", -7)
 
     if tempenchant then
-        border:SetVertexColor(0.7, 0, 1) -- Purple
+        border:SetVertexColor(0.7, 0, 1) -- Purple for enchants
     elseif not debuff then
-        border:SetVertexColor(0, 0, 0)   -- Black
+        border:SetVertexColor(0, 0, 0)   -- Black for standard buffs
     end
     border:SetAllPoints(b)
     b.border = border
 
+    -- Adds a background shadow-style frame
     local shadow = CreateFrame("Frame", nil, b, BackdropTemplateMixin and "BackdropTemplate")
     shadow:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
     shadow:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0)
@@ -64,6 +73,7 @@ local function applySkin(b)
     shadow:SetBackdropBorderColor(0, 0, 0, 1)
     b.bg = shadow
 
+    -- Style duration text
     local duration = _G[name .. "Duration"]
     if duration then
         setupFont(duration)
@@ -71,6 +81,7 @@ local function applySkin(b)
         duration:SetPoint("BOTTOM", b, "BOTTOM", 0, -2)
     end
 
+    -- Style stack count text
     local count = _G[name .. "Count"]
     if count then
         setupFont(count)
@@ -82,14 +93,14 @@ local function applySkin(b)
     b.styled = true
 end
 
--- Updated updateAllBuffAnchors with larger gap between enchants and buffs
+-- Custom update function to reskin and reposition all buff and enchant buttons
 local function updateAllBuffAnchors()
     local numBuffs = BUFF_ACTUAL_DISPLAY or 0
     local numEnchants = BuffFrame.numEnchants or 0
-    local gapBetweenEnchantsAndBuffs = 10 -- Bigger gap here
-    local barPadding = 4 -- Use your existing padding (or adjust)
+    local gapBetweenEnchantsAndBuffs = 10  -- Custom gap
+    local barPadding = 4  -- Padding between buttons
 
-    -- Skin all buffs
+    -- Skin all buff buttons
     for i = 1, numBuffs do
         local button = _G["BuffButton"..i]
         if button and not button.styled then
@@ -97,7 +108,7 @@ local function updateAllBuffAnchors()
         end
     end
 
-    -- Skin all temp enchants
+    -- Skin all temporary enchant buttons
     for i = 1, numEnchants do
         local button = _G["TempEnchant"..i]
         if button and not button.styled then
@@ -120,7 +131,7 @@ local function updateAllBuffAnchors()
         end
     end
 
-    -- Position buffs with larger gap after enchants
+    -- Position buff buttons with spacing after enchants
     for i = 1, numBuffs do
         local button = _G["BuffButton"..i]
         if button then
@@ -140,7 +151,7 @@ local function updateAllBuffAnchors()
     end
 end
 
--- Updates debuff anchors and skins them
+-- Skin and anchor a debuff button
 local function updateDebuffAnchors(name, i)
     local button = _G[name .. i]
     if button and not button.styled then
@@ -148,18 +159,18 @@ local function updateDebuffAnchors(name, i)
     end
 end
 
--- Position the entire buff frame near minimap
+-- Move the entire BuffFrame to a custom position near the minimap
 local function positionBuffFrame()
     BuffFrame:ClearAllPoints()
     BuffFrame:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -10, 2)
     BuffFrame:SetScale(1)
 end
 
--- Hook into Blizzard update functions to apply styling and positioning
+-- Hook into Blizzard's update functions to override the default layout/skin
 hooksecurefunc("BuffFrame_UpdateAllBuffAnchors", updateAllBuffAnchors)
 hooksecurefunc("DebuffButton_UpdateAnchors", updateDebuffAnchors)
 
--- Initialize styling and positioning on login
+-- Initialize everything when the player enters the world
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", function()

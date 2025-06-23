@@ -28,6 +28,7 @@ Misc/CVarTweaks.lua
 Misc/EasyDelete.lua
 Misc/FasterLoot.lua
 Misc/LootLite.lua
+Misc/CashFlowLite.lua
 Misc/Stats.lua
 Misc/TrainerFilterFix.lua
 Misc/UIScale.lua

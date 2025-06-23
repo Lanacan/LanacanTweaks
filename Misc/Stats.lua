@@ -1,3 +1,12 @@
+-----------------------------
+-- Lanacan FPS & Latency Stats 
+-- Ripped off from SUI Addon: https://www.curseforge.com/wow/addons/sui
+-- WoW Classic Addon to display current frames per second (FPS) and network latency
+-- in a small, optionally movable frame anchored to the bottom-left of the screen.
+-- Supports class-colored text and updates once per second for minimal overhead.
+-----------------------------
+
+
 -- Create the main frame for displaying FPS and latency stats
 StatsFrame = CreateFrame("Frame", "StatsFrame", UIParent)
 
