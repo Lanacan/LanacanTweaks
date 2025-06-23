@@ -4,6 +4,7 @@ My Personal WoW Addon "borrowed" from others.
 **NOTE** - This is for WoW Classic Era/Anniversary. 
 
 This addon has the following included:
+
 Basic Square minimap with time and Coords - Think of it as a slimmed down Basic Minimap by funkydude
 
 Target frame Aura & Player Buff skinning to match look of Minimap
