@@ -313,11 +313,17 @@ local function init()
         end
     end
 
-    ----------------------
+   ----------------------
     -- HIDE DECORATIVE TEXTURES
-    ----------------------
-    if SlidingActionBarTexture0 then SlidingActionBarTexture0:Hide() end
-    if SlidingActionBarTexture1 then SlidingActionBarTexture1:Hide() end
+    ----------------------	
+    if SlidingActionBarTexture0 then
+        SlidingActionBarTexture0:Hide()
+        SlidingActionBarTexture0:SetAlpha(0)
+    end
+    if SlidingActionBarTexture1 then
+        SlidingActionBarTexture1:Hide()
+        SlidingActionBarTexture1:SetAlpha(0)
+    end
 
     ----------------------
     -- HOTKEY FONT TWEAK	
