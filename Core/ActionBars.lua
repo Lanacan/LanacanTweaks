@@ -32,8 +32,7 @@ local function init()
     local hiddenElements = {
         MainMenuBarVehicleLeaveButton,
         MainMenuBarTexture0, MainMenuBarTexture1, MainMenuBarTexture2, MainMenuBarTexture3,
-        MainMenuBarLeftEndCap, MainMenuBarRightEndCap,
-        ActionBarUpButton, ActionBarDownButton,
+        MainMenuBarLeftEndCap, MainMenuBarRightEndCap, MainMenuBarPerformanceBar, ActionBarUpButton, ActionBarDownButton,
         ReputationWatchBar, MainMenuExpBar,
         ArtifactWatchBar, HonorWatchBar,
         MainMenuBarPageNumber,
