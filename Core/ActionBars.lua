@@ -11,11 +11,8 @@ local function init()
     ----------------------
 	-- Do not run this addon if Bartender4 or Dominos are loaded
 	----------------------
-    if IsAddOnLoaded("Bartender4") then
-        print("|cFFFFFFFFLanacan|r|cffa335eeTweaks|r: Bartender4 is loaded. Custom Actionbar layout code will not run.")
-        return
-    elseif IsAddOnLoaded("Dominos") then
-        print("|cFFFFFFFFLanacan|r|cffa335eeTweaks|r: Dominos is loaded. Custom Actionbar layout code will not run.")
+    if IsAddOnLoaded("Bartender4") or IsAddOnLoaded("Dominos") then
+        print("|cFFFFFFFFLanacan|r|cffa335eeTweaks|r: Actionbar addon detected. Lanacan layout disabled.")
         return
     end
 
@@ -125,11 +122,25 @@ local function init()
 	-- CORNER MENU SYSTEM (Bags + Micro Buttons with Mouseover)
 	-- Thank you Tidy Bars for code.
 	----------------------
-	local MenuButtonFrames = {
-		CharacterMicroButton, SpellbookMicroButton, TalentMicroButton,
-		QuestLogMicroButton, SocialsMicroButton, LFGMicroButton,
-		MainMenuMicroButton, HelpMicroButton, WorldMapMicroButton,
+	local microNames = {
+		"CharacterMicroButton",
+		"SpellbookMicroButton",
+		"TalentMicroButton",
+		"QuestLogMicroButton",
+		"SocialsMicroButton", 
+		"LFGMicroButton",
+		"MainMenuMicroButton", 
+		"HelpMicroButton", 
+		"WorldMapMicroButton",
 	}
+	
+	local MenuButtonFrames = {}
+    for _, name in ipairs(microNames) do
+        local btn = _G[name]
+        if btn then
+            table.insert(MenuButtonFrames, btn)
+        end
+    end
 
 	local BagButtonFrameList = {
 		MainMenuBarBackpackButton, CharacterBag0Slot,
@@ -138,95 +149,67 @@ local function init()
 	}
 
 	local CornerMenuFrame = CreateFrame("Frame", "LanacanTweaks_CornerMenuFrame", UIParent)
-	CornerMenuFrame:SetFrameStrata("MEDIUM") -- Or "HIGH" if necessary
-	CornerMenuFrame:SetFrameLevel(10)        -- Ensure above default UI
-	CornerMenuFrame:SetWidth(300)
-	CornerMenuFrame:SetHeight(150)
-	CornerMenuFrame:SetPoint("BOTTOMRIGHT")
-	CornerMenuFrame:SetScale(1)
-	CornerMenuFrame:SetAlpha(0) -- Start hidden
+    CornerMenuFrame:SetFrameStrata("MEDIUM")
+    CornerMenuFrame:SetFrameLevel(10)
+    CornerMenuFrame:SetSize(300, 150)
+    CornerMenuFrame:SetPoint("BOTTOMRIGHT")
+    CornerMenuFrame:SetScale(1)
+    CornerMenuFrame:SetAlpha(0)
+    CornerMenuFrame:EnableMouse(true)
 
-	CornerMenuFrame:EnableMouse(true)
-	
-	MainMenuMicroButton:SetParent(CornerMenuFrame)
-	MainMenuMicroButton:EnableMouse(true)
+    local function FadeIn(frame)
+        UIFrameFadeIn(frame, 0.25, frame:GetAlpha(), 1)
+    end
+    local function FadeOut(frame)
+        UIFrameFadeOut(frame, 0.25, frame:GetAlpha(), 0)
+    end
 
-	HelpMicroButton:SetParent(CornerMenuFrame)
-	HelpMicroButton:EnableMouse(true)
+    CornerMenuFrame:SetScript("OnEnter", FadeIn)
+    CornerMenuFrame:SetScript("OnLeave", FadeOut)
 
-	WorldMapMicroButton:SetParent(CornerMenuFrame)
-	WorldMapMicroButton:EnableMouse(true)
+    for i, btn in ipairs(BagButtonFrameList) do
+        if btn then
+            btn:SetParent(CornerMenuFrame)
+            btn:ClearAllPoints()
+            if i == 1 then
+                btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -10, 45)
+            else
+                btn:SetPoint("RIGHT", BagButtonFrameList[i-1], "LEFT", -2, 0)
+            end
+        end
+    end
 
+    for i, btn in ipairs(MenuButtonFrames) do
+        if btn then
+            btn:SetParent(CornerMenuFrame)
+            btn:ClearAllPoints()
+            btn:SetAlpha(1)
+            btn:Show()
+            if i == 1 then
+                btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -(btn:GetWidth() * 7), 5)
+            else
+                btn:SetPoint("LEFT", MenuButtonFrames[i-1], "RIGHT", 0, 0)
+            end
+        end
+    end
 
-	local function FadeIn(frame)
-		UIFrameFadeIn(frame, 0.25, frame:GetAlpha(), 1)
-	end
+    local function OnChildEnter() FadeIn(CornerMenuFrame) end
+    local function OnChildLeave() FadeOut(CornerMenuFrame) end
 
-	local function FadeOut(frame)
-		UIFrameFadeOut(frame, 0.25, frame:GetAlpha(), 0)
-	end
-
-	CornerMenuFrame:SetScript("OnEnter", function(self)
-		FadeIn(self)
-	end)
-
-	CornerMenuFrame:SetScript("OnLeave", function(self)
-		FadeOut(self)
-	end)
-
-	-- Position bag buttons
-	for i, btn in pairs(BagButtonFrameList) do
-		btn:SetParent(CornerMenuFrame)
-		btn:ClearAllPoints()
-		if i == 1 then			
-			btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -10, 45)
-		else
-			btn:SetPoint("RIGHT", BagButtonFrameList[i-1], "LEFT", -2, 0)
-		end
-	end
-
-	-- Position micro buttons
-	for i, btn in ipairs(MenuButtonFrames) do
-		if btn then
-			btn:SetParent(CornerMenuFrame)
-			btn:ClearAllPoints()
-			--btn:SetScale(UIParent:GetScale())
-			btn:SetAlpha(1)
-			btn:Show()
-			if i == 1 then				
-				btn:SetPoint("BOTTOMRIGHT", CornerMenuFrame, "BOTTOMRIGHT", -(btn:GetWidth() * 7), 5)
-			else
-				btn:SetPoint("LEFT", MenuButtonFrames[i-1], "RIGHT", 0, 0)
-			end
-		end
-	end
-
-	-- Keep frame visible while mouse is over any button
-	local function OnChildEnter(self)
-		FadeIn(CornerMenuFrame)
-	end
-
-	local function OnChildLeave(self)
-		-- Small delay to prevent flicker, or immediately fade out
-		FadeOut(CornerMenuFrame)
-	end
-
-	-- Add mouse events to all buttons
-	for _, btn in ipairs(MenuButtonFrames) do
-		if btn then
-			btn:EnableMouse(true)
-			btn:SetScript("OnEnter", OnChildEnter)
-			btn:SetScript("OnLeave", OnChildLeave)
-		end
-	end
-
-	for _, btn in ipairs(BagButtonFrameList) do
-		if btn then
-			btn:EnableMouse(true)
-			btn:SetScript("OnEnter", OnChildEnter)
-			btn:SetScript("OnLeave", OnChildLeave)
-		end
-	end
+    for _, btn in ipairs(MenuButtonFrames) do
+        if btn then
+            btn:EnableMouse(true)
+            btn:SetScript("OnEnter", OnChildEnter)
+            btn:SetScript("OnLeave", OnChildLeave)
+        end
+    end
+    for _, btn in ipairs(BagButtonFrameList) do
+        if btn then
+            btn:EnableMouse(true)
+            btn:SetScript("OnEnter", OnChildEnter)
+            btn:SetScript("OnLeave", OnChildLeave)
+        end
+    end
 
     ----------------------
     -- ACTIONBAR LAYOUTS
@@ -312,10 +295,10 @@ local function init()
         end
     end
 
-   ----------------------
+    ----------------------
     -- HIDE DECORATIVE TEXTURES
-    ----------------------	
-    if SlidingActionBarTexture0 then
+    ----------------------    	
+	if SlidingActionBarTexture0 then
         SlidingActionBarTexture0:Hide()
         SlidingActionBarTexture0:SetAlpha(0)
     end
@@ -384,4 +367,3 @@ end
 local a = CreateFrame("Frame")
 a:RegisterEvent("PLAYER_LOGIN")
 a:SetScript("OnEvent", init)
-
