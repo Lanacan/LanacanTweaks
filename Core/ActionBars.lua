@@ -58,6 +58,17 @@ local function init()
         RegisterStateDriver(StanceBarFrame, "visibility", "hide")
     end
 	
+	-- Hide Stance Bar Background
+	if StanceBarFrame then
+		local regions = {StanceBarFrame:GetRegions()}
+		for _, region in ipairs(regions) do
+			if region:IsObjectType("Texture") then
+				region:SetTexture(nil)
+				region:Hide()
+			end
+		end
+	end
+	
 	-- Hide XP and Reputation Bars 
 	local function hideXPBar()
 		if MainMenuExpBar then
@@ -367,3 +378,4 @@ end
 local a = CreateFrame("Frame")
 a:RegisterEvent("PLAYER_LOGIN")
 a:SetScript("OnEvent", init)
+
