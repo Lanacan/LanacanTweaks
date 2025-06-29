@@ -10,7 +10,8 @@
 ----------------------
 
 -- Configuration for copy button positioning and alpha transparency
-local BUTTON_POSITION = { "BOTTOMRIGHT", -4, 4 }
+local BUTTON_POSITION = { "TOPLEFT", 4, -4 }
+--local BUTTON_POSITION = { "BOTTOMRIGHT", -4, 4 }
 local BUTTON_ALPHA_IDLE = 0.15
 local BUTTON_ALPHA_HOVER = 1.0
 
