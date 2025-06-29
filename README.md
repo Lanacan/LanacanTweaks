@@ -63,5 +63,5 @@ QOL Items:
  - Vehicle Exit Button (Shows in Minimap)
  - TrainerFilterFix - Embeded
  - Tullar Range Embeded
- - LootLite - Embeded
+ - LootLite/CashFlowLite - Embeded
 
