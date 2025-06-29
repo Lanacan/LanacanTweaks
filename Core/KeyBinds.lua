@@ -1,3 +1,15 @@
+-------------------------------
+-- Lanacan KeyBinder Addon
+-- 
+-- Automatically sets up custom keybindings for action bars upon player login in WoW Classic.
+-- 
+-- Features:
+-- - Binds keys to Action Bar 1 (Main), Action Bar 2 (Bottom Left), and Action Bar 3 (Bottom Right)
+-- - Uses standard keys, Shift, Alt, and character-specific bindings for flexibility
+-- - Automatically saves bindings to character profile
+-- - Prints a confirmation message when bindings are applied
+-------------------------------
+
 local function SetLanacanBindings()
     -- Action Bar 1 (Main): ACTIONBUTTON1 to ACTIONBUTTON12
     local mainBarKeys = { "1", "2", "3", "4", "R", "C", "F1", "F2", "F3", "F4", "F", "Z" }
