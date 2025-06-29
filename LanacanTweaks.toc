@@ -20,6 +20,9 @@ Core/Vehicle.lua
 Core/NamePlates.lua
 Core/RaidFrameReSizer.lua
 
+## DO NOT ENABLE THIS UNLESS YOU WANT TO USE MY PERSONAL KEYBINDS!
+Core/KeyBinds.lua 
+
 ## QOL TWEAKS ##
 Misc/AutoBags.lua
 Misc/AutoSellRepair.lua
